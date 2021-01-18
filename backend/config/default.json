@@ -1,0 +1,4 @@
+{
+    "mongoURI" : "mongodb+srv://hackdaddy:billcosby1234@hackdaddy.kpxpb.mongodb.net/JobPortal?retryWrites=true&w=majority",
+    "jwtSecret" : "sl_mySecret"
+}
