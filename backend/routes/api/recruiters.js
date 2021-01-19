@@ -103,7 +103,7 @@ router.post('/profile' , auth, async (req,res) =>{
 
     try{
         const updatedRecruiter = await recruiterToChange.save()
-        res.json({updatedRecruiter})
+        res.json(updatedRecruiter)
     }
     catch(err){
         res.status(500).json(err.message)
@@ -131,16 +131,24 @@ router.put('/apprate/:app_id' , auth, async (req,res) =>{
         return res.status(400).json({msg: 'Applicant doesnt exist'})
     }
 
-    var sum = applicantToRate.rating * applicantToRate.num_rates
-    applicantToRate.num_rates = applicantToRate.num_rates + 1
-    sum = sum + newRate
-    newRating = sum/applicantToRate.num_rates
-    applicantToRate.rating = newRating
-    
+    if(applicantToRate.ratings.find(r => {
+        if(r.rec_id === req.user.id){
+            return true
+        }
+
+        return false
+    })){
+        return res.status(400).json({msg: 'Recruiter has already Rated the Applicant'})
+    }
+
+    applicantToRate.ratings.push({
+        rec_id: req.user.id,
+        rate: newRate
+    })
 
     try{
         const updatedApplicant = await applicantToRate.save()
-        res.json({updatedApplicant})
+        res.json(updatedApplicant)
     }
     catch(err){
         res.status(500).json(err.message)

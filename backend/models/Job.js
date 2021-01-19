@@ -65,6 +65,7 @@ const JobSchema = new Schema({
         type: Number,
         default: 0,
         min: 0,
+        max: 6,
         validate : {
             validator : Number.isInteger,
             message   : 'Should be integer'
@@ -79,21 +80,26 @@ const JobSchema = new Schema({
             message   : 'Should be integer'
           }
     },
-    rating: {
-        type: Number,
-        min: 0,
-        max: 5,
-        default: 0
-        
-    },
-    num_rates: {
-        type: Number,
-        default: 0,
-        min: 0,
-        validate : {
-            validator : Number.isInteger,
-            message   : 'Should be integer'
-          }
+    ratings: {
+        type: [
+            {
+                app_id: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'applicants',
+                    required: true
+                },
+                rate: {
+                    type: Number,
+                    min: 0,
+                    max: 5,
+                    validate: {
+                        validator: Number.isInteger,
+                        message: 'Should be Integer'
+                    }
+                }
+            }
+        ],
+        default: []
     },
     state: {
         type: String,

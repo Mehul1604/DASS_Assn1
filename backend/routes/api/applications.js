@@ -2,40 +2,12 @@ const express = require('express')
 const router = express.Router();
 const auth = require('../../middleware/auth')
 
-//Job Model
 const Job = require('../../models/Job');
 const Recruiter = require('../../models/Recruiter')
 const Applicant = require('../../models/Applicant')
 const Application = require('../../models/Application')
 
-// @route GET api/jobs/rec
-// @desc  Get jobs for recruiter
-// @access Private
 
-// router.get('/rec' , auth , async (req,res) =>{
-
-//     const recruiter = await Recruiter.findById(req.user.id)
-//     if(!recruiter){
-//         return res.status(400).json({msg: 'Only Recruiter endpoint!'})
-//     }
-//     const activeJobs = await Job.find({recruiter_id: req.user.id , state: 'active'})
-//     return res.json(activeJobs)
-// });
-
-// // @route GET api/jobs/app
-// // @desc  Get jobs for applicant
-// // @access Private
-
-// router.get('/app' , auth , async (req,res) =>{
-//     const applicant = await Applicant.findById(req.user.id)
-//     if(!applicant){
-//         return res.status(400).json({msg: 'Only Applicant endpoint!'})
-//     }
-//     var cur_date = new Date();
-//     console.log(cur_date)
-//     const availableJobs = await Job.find({deadline: {$gt: cur_date}})
-//     return res.json(availableJobs)
-// });
 
 // @route POST api/applications
 // @desc  Add an application
@@ -54,6 +26,10 @@ router.post('/' , auth , async (req,res) =>{
 
     const {sop , job_id , recruiter_id} = req.body
     jobToApply = await Job.findById(job_id)
+    if(jobToApply.pos == jobToApply.max_pos){
+        return res.status(400).json({msg: 'Maximum number of positions for job!'})
+    }
+    
     if(jobToApply.app == jobToApply.max_app){
         return res.status(400).json({msg: 'Maximum number of applications for job!'})
     }
@@ -106,7 +82,7 @@ router.get('/rec/:job_id' , auth , async (req,res) =>{
         return res.status(400).json({msg: 'Only Recruiter endpoint!'})
     }
 
-    const allApplications = await Application.find({job_id: req.params.job_id})
+    const allApplications = await Application.find({job_id: req.params.job_id , stage: {$in : ['applied' , 'shortlisted' , 'accepted']}}).populate('applicant_id')
     return res.json(allApplications)
 
 });
@@ -157,7 +133,7 @@ router.put('/:app_id' , auth , async (req,res) =>{
                 console.log('other applications rejected')
 
                 
-                await Recruiter.findByIdAndUpdate(updatedApplication.recruiter_id , {$push: {employees: {app_id: updatedApplication.applicant_id , job_id: updatedApplication.job_id}}})
+                await Recruiter.findByIdAndUpdate(updatedApplication.recruiter_id , {$push: {employees: updatedApplication._id}})
                 await Applicant.findByIdAndUpdate(updatedApplication.applicant_id , {$set: {state: 'gotJob'} , $inc: {num_applications: -1}})
                 jobToJoin = await Job.findById(updatedApplication.job_id)
                 if(jobToJoin.pos == jobToJoin.max_pos){
@@ -165,6 +141,7 @@ router.put('/:app_id' , auth , async (req,res) =>{
                 }
 
                 const updatedJob = await Job.findByIdAndUpdate(updatedApplication.job_id , {$inc: {pos: 1 , app: -1}} , {new : true})
+                console.log('JOB POSITIONS ARE NOW' , updatedJob.pos , 'MAX POSITIONS ARE' , updatedJob.max_pos)
                 if(updatedJob.pos == updatedJob.max_pos){
                     await Job.findByIdAndUpdate(updatedApplication.job_id , {$set: {state: 'posFilled'}} , {new : true})
                     const applicationsHaveToReject = await Application.find({job_id: updatedApplication.job_id , stage: {$in: ['applied','shortlisted']}})
@@ -176,7 +153,7 @@ router.put('/:app_id' , auth , async (req,res) =>{
                         await appl.save()
                         console.log('appl rejected')
                         await Applicant.findByIdAndUpdate(appl.applicant_id , {$inc: {num_applications: -1}})
-                        await Job.findByIdAndUpdate(appl.job_id , {$inc: {app: -1} , $set: {state: 'active'}})
+                        await Job.findByIdAndUpdate(appl.job_id , {$inc: {app: -1}})
                         console.log('appl ke job and applicant updated')  
     
                     }
@@ -192,7 +169,7 @@ router.put('/:app_id' , auth , async (req,res) =>{
             }
         }
 
-        return res.json({updatedApplication})
+        return res.json(updatedApplication)
     }
     catch(err){
         res.status(500).json(err.message)

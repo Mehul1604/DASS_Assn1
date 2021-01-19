@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import {Link} from 'react-router-dom'
-import {Container , Button, Grid , Paper , TextField , Snackbar} from '@material-ui/core'
+import {Container , Grid , Paper , TextField , Snackbar} from '@material-ui/core'
+import {Button} from 'react-bootstrap'
 import MuiAlert from '@material-ui/lab/Alert'
 import UserContext from '../context/UserContext'
 import axios from 'axios';
@@ -52,6 +53,7 @@ class ApplicantProfile extends Component {
     static contextType = UserContext
 
     state = {
+        userOrig: null,
         name: null,
         email: null,
         applications: null,
@@ -75,11 +77,12 @@ class ApplicantProfile extends Component {
                 console.log('making axios now'  )
                 const applicant = await axios.get('/api/auth/app/user' , {headers: {'x-auth-token' : token}})
                 this.setState({
+                    userOrig: applicant.data,
                     name: applicant.data.name,
                     email: applicant.data.name,
                     applications: applicant.data.num_applications,
                     work: applicant.data.state === 'gotJob' ? applicant.data.application_ids.filter(app => app.stage === 'accepted')[0].job_id.title : null,
-                    rating: applicant.data.rating,
+                    rating: this.getRating(applicant.data.ratings),
                     status: applicant.data.state === 'active' ? 'Unemployed' : 'Employed',
                     education: applicant.data.education.map(appEdu => { return {...appEdu , tempId: generate()}}),
                     skills: applicant.data.skills
@@ -106,14 +109,20 @@ class ApplicantProfile extends Component {
         this.setState({canEditName: true})
     }
 
+    cancelName = () => {
+        let origName = this.context.user.name
+        this.setState({canEditName: false , name: origName})
+    }
+
     submitName = async () =>{
         this.setState({loading: true})
-        console.log('NEW NAME IS' , this.state.name)
+        // console.log('NEW NAME IS' , this.state.name)
         this.setState({canEditName: false})
         const body = {name: this.state.name}
         try{
             const changedNameApplicant = await axios.post('/api/applicants/profile' , body , {headers: {'x-auth-token': this.context.token}})
-            this.context.changeName(this.context.token , true , changedNameApplicant.name)
+            // console.log('GONNA GIVE' , changedNameApplicant.data)
+            this.context.changeName(changedNameApplicant.data.name)
         }
         catch(err){
             console.log(err)
@@ -150,6 +159,7 @@ class ApplicantProfile extends Component {
             education: this.state.education.filter((edu) => edu.tempId !== idx)
         })
     }
+
 
     eduSubmit = async (e) =>{
         e.preventDefault()
@@ -227,9 +237,20 @@ class ApplicantProfile extends Component {
     
         this.setState({validOpen: false})
       };
+
+      getRating = (ratings_list) =>{
+        let n = ratings_list.length
+        if(n === 0) return 0
+        let sum = 0
+        for(let i = 0 ; i < n; i++){
+            sum = sum + ratings_list[i].rate
+        }
+
+        return sum/n
+    }
     //   onClick={this.editName} style={{marginTop:'1rem' , marginLeft:'1rem'}}
     render() {
-        console.log(this.state)
+        // console.log('CONTEXT LOOKS LIKE' , this.context)
         return this.state.loading ? <Loader type="Circles" color='blue' radius height={200} width={200} style={{marginLeft:'43%' , marginTop:'20%'}}/> : (
             
             <div className="container" style={{  marginTop:'2rem'}}>
@@ -240,14 +261,19 @@ class ApplicantProfile extends Component {
                 </Snackbar>
                   
                 <Grid container spacing={5}>
-                    <Grid style={{paddingLeft:'2rem' , backgroundColor:'yellow'}} item xs={4}>
-                        <Grid style={{border:'2px solid #ADF1B3' , borderRadius:'1rem' ,  backgroundColor:'#80ffe5' }} container direction='column' justify='center' alignItems='flex-start' spacing={3}>
-                            <Grid style={{backgroundColor:'pink'}} item>
+                    <Grid style={{paddingLeft:'2rem' }} item xs={4}>
+                        <Grid style={{borderRight:'2px solid black' }} container direction='column' justify='center' alignItems='flex-start' spacing={3}>
+                            <Grid  item>
                                 <div>
                                     <h3>Name</h3>
                                     <form onSubmit={this.submitName}>
                                     <TextField required InputProps={{readOnly: !this.state.canEditName}} value={this.state.name} onChange={this.onNameChange}   variant='outlined'/>
-                                    {!this.state.canEditName ? (<button key="edit-button" style={{marginTop:'1rem' , marginLeft:'1rem'}} type="button" onClick={this.editName}>Edit</button>) : (<button type="submit"  style={{marginTop:'1rem' , marginLeft:'1rem'}}>Submit</button>)}
+                                    {!this.state.canEditName ? (<Button variant="primary" key="edit-button" style={{marginTop:'1rem' , marginLeft:'1rem'}} type="button" onClick={this.editName}>Edit</Button>) : (
+                                    <>
+                                    <Button key="name-submit" variant="danger" style={{marginLeft:'1rem' , marginTop:'1rem'}} onClick={this.cancelName} type="button">Cancel</Button>
+                                    <Button key="name-cancel" variant="success"  type="submit" key="name-submit" style={{marginTop:'1rem'}} >Submit</Button>
+                                    </>
+                                    )}
                                     </form>
                                 </div>
                             </Grid>
@@ -282,27 +308,27 @@ class ApplicantProfile extends Component {
                             
                         </Grid>
                     </Grid>
-                    <Grid style={{backgroundColor:'pink'}} item xs={8}>
-                        <Grid style={{border:'2px solid #ADF1B3' , borderRadius:'1rem' ,  backgroundColor:'red' }} container direction='column' justify='center'  spacing={3}>
-                            <Grid style={{backgroundColor:'pink'}} item>
+                    <Grid  item xs={8}>
+                        <Grid  container direction='column' justify='center'  spacing={3}>
+                            <Grid  item>
                                 <div>
                                     <h3>Education</h3>
                                     <form onSubmit={this.eduSubmit}>
                                     {this.state.education.length ? this.state.education.map((edu) => (
                                         <div key={edu.tempId}>
-                                        <TextField InputProps={{readOnly: !this.state.canEditEducation}} required name='institution' placeholder='Add Institution' value={edu.institution} onChange={(e) => this.eduChange(e,edu.tempId)} variant='outlined'/>
-                                        <TextField InputProps={{readOnly: !this.state.canEditEducation}} inputProps={{pattern:'^[12][0-9]{3}$'}} required name='start_year' placeholder='Add Start Year(YYYY)' value ={edu.start_year} onChange={(e) => this.eduChange(e,edu.tempId)} variant='outlined'/>
-                                        <TextField InputProps={{readOnly: !this.state.canEditEducation}} name='end_year' placeholder='Add End Year(YYYY)' value={edu.end_year ? edu.end_year : ''} onChange={(e) => this.eduChange(e,edu.tempId)} variant='outlined'/>
-                                        {this.state.canEditEducation ? (<button key="edit-education-remove" onClick={(e) => this.eduRemove(e,edu.tempId)}>&times;</button>) : ''}
+                                        <TextField style={{marginBottom:'0.5rem'}} InputProps={{readOnly: !this.state.canEditEducation}} required name='institution' placeholder='Add Institution' value={edu.institution} onChange={(e) => this.eduChange(e,edu.tempId)} variant='outlined'/>
+                                        <TextField style={{marginBottom:'0.5rem'}} InputProps={{readOnly: !this.state.canEditEducation}} inputProps={{pattern:'^[12][0-9]{3}$'}} required name='start_year' placeholder='Add Start Year(YYYY)' value ={edu.start_year} onChange={(e) => this.eduChange(e,edu.tempId)} variant='outlined'/>
+                                        <TextField style={{marginBottom:'0.5rem'}} InputProps={{readOnly: !this.state.canEditEducation}} name='end_year' placeholder='Add End Year(YYYY)' value={edu.end_year ? edu.end_year : ''} onChange={(e) => this.eduChange(e,edu.tempId)} variant='outlined'/>
+                                        {this.state.canEditEducation ? (<Button style={{marginLeft:'1rem'}} variant="danger" key="edit-education-remove" onClick={(e) => this.eduRemove(e,edu.tempId)}>&times;</Button>) : ''}
                                         </div>
                                         
                                     )) : 'Add Education'}
                                     {!this.state.canEditEducation ? (
-                                        <button key="edit-button" type="button" onClick={this.editEdu}>Edit</button>
+                                        <Button style={{marginTop:'1rem'}} variant="primary" key="edit-button" type="button" onClick={this.editEdu}>Edit</Button>
                                     ): (
                                         <>
-                                        <button key="edit-education-add" onClick={this.eduAdd}>Add</button>
-                                        <button key ="edit-education-submit" type='submit'>Submit</button>
+                                        <Button style={{marginLeft:'1rem' , marginTop:'1rem'}} variant="primary" key="edit-education-add" onClick={this.eduAdd}>Add</Button>
+                                        <Button style={{marginLeft:'1rem' , marginTop:'1rem'}} variant="success" key ="edit-education-submit" type='submit'>Submit</Button>
                                         </>
                                     )}
                                     
@@ -310,14 +336,14 @@ class ApplicantProfile extends Component {
                                     
                                 </div>
                             </Grid>
-                            <Grid style={{backgroundColor:'pink'}} item>
+                            <Grid  item>
                                 <div>
                                     <h3>Skills</h3>
                                     {/* {this.state.skills.length ? this.state.skills.map((skill , idx) => (
                                         <span key={idx}>{skill} </span>
                                     )) : 'Add Skills'} */}
                                     <Select  isDisabled={!this.state.canEditSkills} className="dropdown" placeholder="Select skill" value={predefSkills.filter(obj => this.state.skills.includes(obj.label))} options={predefSkills} onChange={this.skillChange} isMulti/>
-                                    {!this.state.canEditSkills ? (<button key="edit-button-skill" style={{marginTop:'1rem' , marginLeft:'1rem'}} type="button" onClick={this.editSkill}>Edit</button>) : (<button onClick={this.skillSubmit}  style={{marginTop:'1rem' , marginLeft:'1rem'}}>Submit</button>)}
+                                    {!this.state.canEditSkills ? (<Button variant="primary" key="edit-button-skill" style={{marginTop:'1rem'}} type="button" onClick={this.editSkill}>Edit</Button>) : (<Button variant="success" onClick={this.skillSubmit}  style={{marginTop:'1rem'}}>Submit</Button>)}
                                     
                                 </div>
                             </Grid>

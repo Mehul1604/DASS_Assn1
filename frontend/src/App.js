@@ -15,6 +15,8 @@ import RecruiterProfile from './components/RecruiterProfile';
 import AppJobs from './components/AppJobs'
 import AppApplications from './components/AppApplications';
 import RecCreate from './components/RecCreate'
+import RecJobs from './components/RecJobs'
+import JobApps from './components/JobApps';
 // import {Provider} from 'react-redux'
 // import store from './store'
 
@@ -37,7 +39,7 @@ class App extends Component{
   }
 
   changeName = (name) =>{
-    console.log('changing name')
+    console.log('CHANGING CONTEXT NAME TO' , name)
     const newNameUser = {...this.state.user , name: name}
     this.setState({
       user: newNameUser
@@ -45,11 +47,13 @@ class App extends Component{
   }
 
   logOut = () =>{
+    
       this.setState({
           token: null,
           isAuthenticated: false,
           user: null
       })
+      localStorage.removeItem('token')
   }
   
   componentDidMount(){
@@ -107,6 +111,8 @@ class App extends Component{
                   <Route path="/appJobs" component={AppJobs}/>
                   <Route path="/appApps" component={AppApplications}/>
                   <Route path="/recCreate" component={RecCreate}/>
+                  <Route path="/recJobs" component={RecJobs}/>
+                  <Route path="/jobApps/:job_id" component={JobApps}/>
               </Switch>
               </>
             )}

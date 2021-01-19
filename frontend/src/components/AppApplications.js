@@ -18,6 +18,21 @@ function Alert(props) {
     return <MuiAlert elevation={6} variant="filled" {...props} />;
   }
 
+function makeButton(id,str){
+    if(str === 'applied'){
+        return (<Button disabled key={"applied-" + id} variant="dark">Applied</Button>)
+    }
+    if(str === 'shortlisted'){
+        return (<Button disabled key={"shortlisted-" + id} variant="warning">Shortlisted</Button>)
+    }
+    if(str === 'accepted'){
+        return (<Button disabled key={"accepted-" + id} variant="success">Accepted</Button>)
+    }
+    if(str === 'rejected'){
+        return (<Button disabled key={"rejected-" + id} variant="danger">Rejected</Button>)
+    }
+}
+
 class AppApplications extends Component {
     
     static contextType = UserContext
@@ -61,6 +76,17 @@ class AppApplications extends Component {
     
         this.setState({showError: false , errorMsg: ''})
       };
+
+      getRating = (ratings_list) =>{
+        let n = ratings_list.length
+        if(n === 0) return 0
+        let sum = 0
+        for(let i = 0 ; i < n; i++){
+            sum = sum + ratings_list[i].rate
+        }
+
+        return sum/n
+    }
       
 
     
@@ -96,13 +122,13 @@ class AppApplications extends Component {
                         {this.state.applicationData.map(appl => (
                             <tr key={appl._id}>
                                 <td>{appl.job_id.title}</td>
-                                <td>{new Date(appl.date_join).toDateString()}</td>
+                                <td>{appl.date_join ? new Date(appl.date_join).toDateString() : 'Not Accepted'}</td>
                                 <td>{appl.job_id.salary}</td>
                                 <td>{appl.recruiter_id.name}</td>
-                                <td>{appl.stage.charAt(0).toUpperCase() + appl.stage.slice(1)}</td>
+                                <td>{makeButton(appl._id , appl.stage)}</td>
                                 <td valign='center'>
-                                    <span style={{position:'relative' , top:'-4.5px' , marginRight:'1rem'}}>{appl.job_id.rating}</span>
-                                    <Rating readOnly={appl.stage !== 'accepted'} value={appl.job_id.rating} precision={0.05}/>
+                                    <span style={{position:'relative' , top:'-4.5px' , marginRight:'1rem'}}>{this.getRating(appl.job_id.ratings)}</span>
+                                    <Rating readOnly={appl.stage !== 'accepted'} value={this.getRating(appl.job_id.ratings)} precision={0.1}/>
                                 </td>
                             </tr>
                             

@@ -18,9 +18,27 @@ router.get('/rec' , auth , async (req,res) =>{
     if(!recruiter){
         return res.status(400).json({msg: 'Only Recruiter endpoint!'})
     }
-    const activeJobs = await Job.find({recruiter_id: req.user.id , state: 'active'})
+    const activeJobs = await Job.find({recruiter_id: req.user.id , state: {$in: ['active' , 'appFilled']}})
     return res.json(activeJobs)
 });
+
+// @route GET api/jobs/job/:job_id
+// @desc  Get job info 
+// @access Private
+
+router.get('/job/:job_id' , auth , async (req,res) => {
+    const recruiter = await Recruiter.findById(req.user.id)
+    if(!recruiter){
+        return res.status(400).json({msg: 'Only Recruiter endpoint!'})
+    }
+
+    const job = await Job.findById(req.params.job_id)
+    if(!job){
+        return res.json(400).json({msg: 'Job doesnt exist!'})
+    }
+
+    return res.json(job)
+})
 
 // @route GET api/jobs/app
 // @desc  Get jobs for applicant
@@ -76,7 +94,7 @@ router.post('/' , auth , async (req,res) =>{
 // @desc  Edit a Job
 // @access Private 
 
-router.put('/:id' , auth , async (req,res) =>{
+router.post('/:id' , auth , async (req,res) =>{
 
     const jobToChange = await Job.findById(req.params.id)
     if(!jobToChange){
@@ -105,7 +123,7 @@ router.put('/:id' , auth , async (req,res) =>{
             await appl.save()
             console.log('appl rejected')
             await Applicant.findByIdAndUpdate(appl.applicant_id , {$inc: {num_applications: -1}})
-            await Job.findByIdAndUpdate(appl.job_id , {$inc: {app: -1} , $set: {state: 'active'}})
+            await Job.findByIdAndUpdate(appl.job_id , {$inc: {app: -1}})
             console.log('appl ke job and applicant updated')  
 
         }
@@ -114,12 +132,15 @@ router.put('/:id' , auth , async (req,res) =>{
     else if(jobToChange.app == jobToChange.max_app){
         jobToChange.state = 'appFilled'
     }
+    else{
+        jobToChange.state = 'active'
+    }
     
 
     try{
         const updatedJob = await jobToChange.save()
         
-        return res.json({updatedJob})
+        return res.json(updatedJob)
     }
     catch(err){
         return res.status(500).json(err.message)
@@ -157,7 +178,7 @@ router.delete('/:id' , auth, async (req,res) =>{
 
         console.log('Deletes from job and application performed')
 
-        const rec = await Recruiter.findByIdAndUpdate(req.user.id , {$pull : {job_ids : job_id} , $pull: {employees : {job_id: job_id}}} , {new : true})
+        const rec = await Recruiter.findByIdAndUpdate(req.user.id , {$pull : {job_ids : job_id} , $pull: {employees : {$in : application_ids}}} , {new : true})
         console.log('Job id and employees pulled from Recruiter')
         console.log(application_ids.length)
         
@@ -170,7 +191,13 @@ router.delete('/:id' , auth, async (req,res) =>{
                 await Applicant.findByIdAndUpdate(appl.applicant_id , {$pull: {application_ids: appl._id} , $inc: {num_applications: -1}} , {new: true})
             }
             else{
-                await Applicant.findByIdAndUpdate(appl.applicant_id , {$pull: {application_ids: appl._id} , $set: {state: 'active'}} , {new: true})
+                if(appl.stage === 'accepted'){
+                    await Applicant.findByIdAndUpdate(appl.applicant_id , {$pull: {application_ids: appl._id} , $set: {state: 'active'}} , {new: true})
+                }
+                else{
+                    await Applicant.findByIdAndUpdate(appl.applicant_id , {$pull: {application_ids: appl._id}} , {new: true})
+                }
+                
             }
         }
         

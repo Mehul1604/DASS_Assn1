@@ -32,14 +32,8 @@ const RecruiterSchema = new Schema({
     employees: {
         type: [
             {
-                app_id: {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: 'Applicant'
-                },
-                job_id: {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: 'Job'
-                }
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'applications'
             }
         ],
         default: []
