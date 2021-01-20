@@ -27,7 +27,7 @@ export default class AppNavbar extends Component{
 
     logOut = () => {
         this.context.logOut()
-        localStorage.removeItem('token')
+        
     }
 
     render(){

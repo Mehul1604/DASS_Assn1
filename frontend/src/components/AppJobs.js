@@ -233,18 +233,21 @@ class AppJobs extends Component {
                             if(a.salary > b.salary) return 1
                             return 0
                         })
+                        break
                     case "Rating":
                         filteredJobs.sort((a,b) => {
                             if(this.getRating(a.ratings) < this.getRating(b.ratings)) return -1
                             if(this.getRating(a.ratings) > this.getRating(b.ratings)) return 1
                             return 0
                         })
+                        break
                     case "Duration":
                         filteredJobs.sort((a,b) => {
                             if(a.duration < b.duration) return -1
                             if(a.duration > b.duration) return 1
                             return 0
                         })
+                        break
                 }
             }
             else if(sortOrder === "Descending"){
@@ -255,18 +258,21 @@ class AppJobs extends Component {
                             if(a.salary > b.salary) return -1
                             return 0
                         })
+                        break
                     case "Rating":
                         filteredJobs.sort((a,b) => {
                             if(this.getRating(a.ratings) < this.getRating(b.ratings)) return 1
                             if(this.getRating(a.ratings) > this.getRating(b.ratings)) return -1
                             return 0
                         })
+                        break
                     case "Duration":
                         filteredJobs.sort((a,b) => {
                             if(a.duration < b.duration) return 1
                             if(a.duration > b.duration) return -1
                             return 0
                         })
+                        break
                 }
             }
         }

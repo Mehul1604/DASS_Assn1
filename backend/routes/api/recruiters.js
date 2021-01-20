@@ -116,7 +116,10 @@ router.post('/profile' , auth, async (req,res) =>{
 // @access Private
 
 router.get('/emps' , auth,  async (req,res) =>{
-    const recruiter = await Recruiter.findById(req.user.id)
+    const recruiter = await Recruiter.findById(req.user.id).populate({
+        path: 'employees',
+        populate: 'applicant_id job_id'
+    })
     return res.json(recruiter.employees)
 })
 

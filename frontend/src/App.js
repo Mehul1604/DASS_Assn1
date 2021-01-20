@@ -17,6 +17,7 @@ import AppApplications from './components/AppApplications';
 import RecCreate from './components/RecCreate'
 import RecJobs from './components/RecJobs'
 import JobApps from './components/JobApps';
+import RecEmployees from './components/RecEmployees'
 // import {Provider} from 'react-redux'
 // import store from './store'
 
@@ -113,6 +114,7 @@ class App extends Component{
                   <Route path="/recCreate" component={RecCreate}/>
                   <Route path="/recJobs" component={RecJobs}/>
                   <Route path="/jobApps/:job_id" component={JobApps}/>
+                  <Route path="/recEmployees" component={RecEmployees}/>
               </Switch>
               </>
             )}

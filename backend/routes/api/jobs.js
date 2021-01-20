@@ -113,20 +113,15 @@ router.post('/:id' , auth , async (req,res) =>{
     }
 
     if(jobToChange.pos == jobToChange.max_pos){
+        const applicationFilter = ['applied' , 'shortlisted']
         jobToChange.state = 'posFilled'
-        const applicationsHaveToReject = await Application.find({job_id: jobToChange.job_id , stage: {$in: ['applied','shortlisted']}})
-        for(i=0; i<applicationsHaveToReject.length; i++){
-            var appl = applicationsHaveToReject[i]
-            console.log('currently rejecting..')
-            console.log(appl)
-            appl.stage = 'rejected'
-            await appl.save()
-            console.log('appl rejected')
-            await Applicant.findByIdAndUpdate(appl.applicant_id , {$inc: {num_applications: -1}})
-            await Job.findByIdAndUpdate(appl.job_id , {$inc: {app: -1}})
-            console.log('appl ke job and applicant updated')  
-
-        }
+        const otherJobApplications = await Application.find({job_id: jobToChange._id , stage: {$in: applicationFilter}})
+        const num_to_reject = -1 * otherJobApplications.length
+        await Job.findByIdAndUpdate(jobToChange._id , {$inc: {app: num_to_reject}})
+        const otherJobApplicationIds = otherJobApplications.map(appl => appl._id)
+        const otherJobApplicantIds = otherJobApplications.map(appl => appl.applicant_id)
+        await Application.updateMany({_id: {$in: otherJobApplicationIds}} , {$set: {stage: 'rejected'}})
+        await Applicant.updateMany({_id: {$in: otherJobApplicantIds}} , {$inc: {num_applications: -1}})
 
     }
     else if(jobToChange.app == jobToChange.max_app){
@@ -152,6 +147,67 @@ router.post('/:id' , auth , async (req,res) =>{
 // @desc  DELETE a Job
 // @access Private
 
+// router.delete('/:id' , auth, async (req,res) =>{
+//     const recruiter = await Recruiter.findById(req.user.id)
+//     if(!recruiter){
+//         return res.status(400).json({msg: 'Only Recruiter endpoint!'})
+//     }
+//     const jobToBeDeleted = await Job.findById(req.params.id)
+//     if(!jobToBeDeleted){
+//         return res.status(400).json({msg: 'Job doesnt exist'})
+//     }
+//     const job_id = jobToBeDeleted._id
+    
+//     const application_ids = jobToBeDeleted.application_ids
+//     const applicationsToBeDeleted = await Application.find({_id: {$in: application_ids}})
+//     console.log('Related applications recieved')
+//     console.log(application_ids)
+//     console.log(applicationsToBeDeleted)
+//     // const applicant_ids = applicationsToBeDeleted.map(app => app.applicant_id)
+//     // applicant_ids = Array.from(new Set(applicant_ids))
+    
+
+//     try{
+//         await jobToBeDeleted.remove()
+//         await Application.deleteMany({_id: {$in: application_ids}})
+
+//         console.log('Deletes from job and application performed')
+
+//         const rec = await Recruiter.findByIdAndUpdate(req.user.id , {$pull : {job_ids : job_id} , $pull: {employees : {$in : application_ids}}} , {new : true})
+//         console.log('Job id and employees pulled from Recruiter')
+//         console.log(application_ids.length)
+        
+//         await Recruiter.findByIdAndUpdate(req.user.id , {$pullAll : {application_ids : application_ids}} , {new : true})
+        
+//         console.log('Applications removed from Recruiter')
+//         for(i = 0 ; i<applicationsToBeDeleted.length; i++){
+//             var appl = applicationsToBeDeleted[i]
+//             if(appl.stage === 'applied' || appl.stage === 'shortlisted'){
+//                 await Applicant.findByIdAndUpdate(appl.applicant_id , {$pull: {application_ids: appl._id} , $inc: {num_applications: -1}} , {new: true})
+//             }
+//             else{
+//                 if(appl.stage === 'accepted'){
+//                     await Applicant.findByIdAndUpdate(appl.applicant_id , {$pull: {application_ids: appl._id} , $set: {state: 'active'}} , {new: true})
+//                 }
+//                 else{
+//                     await Applicant.findByIdAndUpdate(appl.applicant_id , {$pull: {application_ids: appl._id}} , {new: true})
+//                 }
+                
+//             }
+//         }
+        
+//         console.log('Recruiter and applicant tables updated')
+//         return res.json({msg: 'Successful'})
+ 
+//     }
+//     catch(err){
+//         return res.status(500).json(err.message)
+//     }
+//     // Job.findById(req.params.id)
+//     //     .then(job => job.remove().then(() => res.json({success : true})))
+//     //     .catch(err => res.status(404).json({success : false}))
+// });
+
 router.delete('/:id' , auth, async (req,res) =>{
     const recruiter = await Recruiter.findById(req.user.id)
     if(!recruiter){
@@ -162,55 +218,45 @@ router.delete('/:id' , auth, async (req,res) =>{
         return res.status(400).json({msg: 'Job doesnt exist'})
     }
     const job_id = jobToBeDeleted._id
+    console.log('DELETING ID' , job_id , 'WHICH IS' , jobToBeDeleted)
     
     const application_ids = jobToBeDeleted.application_ids
-    const applicationsToBeDeleted = await Application.find({_id: {$in: application_ids}})
-    console.log('Related applications recieved')
-    console.log(application_ids)
-    console.log(applicationsToBeDeleted)
-    // const applicant_ids = applicationsToBeDeleted.map(app => app.applicant_id)
-    // applicant_ids = Array.from(new Set(applicant_ids))
-    
 
     try{
-        await jobToBeDeleted.remove()
-        await Application.deleteMany({_id: {$in: application_ids}})
-
-        console.log('Deletes from job and application performed')
-
-        const rec = await Recruiter.findByIdAndUpdate(req.user.id , {$pull : {job_ids : job_id} , $pull: {employees : {$in : application_ids}}} , {new : true})
-        console.log('Job id and employees pulled from Recruiter')
-        console.log(application_ids.length)
         
-        await Recruiter.findByIdAndUpdate(req.user.id , {$pullAll : {application_ids : application_ids}} , {new : true})
         
-        console.log('Applications removed from Recruiter')
-        for(i = 0 ; i<applicationsToBeDeleted.length; i++){
-            var appl = applicationsToBeDeleted[i]
+
+        for await (const appl of Application.find({_id: {$in: application_ids}})){
+            console.log('HANDLING APPLICATION' , appl.sop)
             if(appl.stage === 'applied' || appl.stage === 'shortlisted'){
-                await Applicant.findByIdAndUpdate(appl.applicant_id , {$pull: {application_ids: appl._id} , $inc: {num_applications: -1}} , {new: true})
+                
+                await Applicant.findByIdAndUpdate(appl.applicant_id , {$pull: {application_ids: appl._id} , $inc: {num_applications: -1}})
+                console.log('WAS JUST APPLIED SO DEC NUM ONLY')
+            }
+            else if(appl.stage === 'accepted'){
+                await Applicant.findByIdAndUpdate(appl.applicant_id , {$pull: {application_ids: appl._id} , $set: {state: 'active'}})
+                console.log('WAS ACCEPTED SO MAKING ACTIVE AGAIN ALSO')
             }
             else{
-                if(appl.stage === 'accepted'){
-                    await Applicant.findByIdAndUpdate(appl.applicant_id , {$pull: {application_ids: appl._id} , $set: {state: 'active'}} , {new: true})
-                }
-                else{
-                    await Applicant.findByIdAndUpdate(appl.applicant_id , {$pull: {application_ids: appl._id}} , {new: true})
-                }
-                
+                await Applicant.findByIdAndUpdate(appl.applicant_id , {$pull: {application_ids: appl._id}})   
+                console.log('REJECTED SO DONT MATTER')
             }
         }
+
+        await Recruiter.findByIdAndUpdate(req.user.id , {$pull : {job_ids : job_id} , $pull: {employees : {$in : application_ids}}})
         
-        console.log('Recruiter and applicant tables updated')
+        await Recruiter.findByIdAndUpdate(req.user.id , {$pullAll : {application_ids : application_ids}} , {new : true})
+
+        await Application.deleteMany({_id: {$in: application_ids}})
+        await jobToBeDeleted.remove()
+        
         return res.json({msg: 'Successful'})
  
     }
     catch(err){
         return res.status(500).json(err.message)
     }
-    // Job.findById(req.params.id)
-    //     .then(job => job.remove().then(() => res.json({success : true})))
-    //     .catch(err => res.status(404).json({success : false}))
+
 });
 
 module.exports = router

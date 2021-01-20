@@ -33,12 +33,17 @@ function makeButton(id,str){
     }
 }
 
+
+
 class AppApplications extends Component {
     
     static contextType = UserContext
 
     state = {
         applicationData: null,
+        showRating: false,
+        job_rate_id: '',
+        rate: 0,
         showError: false,
         errorMsg: '',
         loading: true
@@ -64,6 +69,16 @@ class AppApplications extends Component {
         }
     }
 
+    getJobState = (job) =>{
+        
+        
+        if(job.state === 'appFilled') return (<Button disabled key={"done-" + job._id} variant="danger">Applications Filled</Button>)
+        if(job.state === 'posFilled') return (<Button disabled key={"posDone-" + job._id} variant="warning">Positions Filled</Button>)
+
+        return (<Button disabled key={"active-" + job._id} variant="primary">Active</Button>)
+
+    }
+
     componentDidMount(){
         
         this.getData(this.context.token)
@@ -87,7 +102,80 @@ class AppApplications extends Component {
 
         return sum/n
     }
-      
+
+    handleClose = (e) =>{
+        this.setState({
+            rate: 0,
+            job_rate_id: '',
+            showRating: false
+        })
+    }
+
+    openRating =(id) =>{
+        this.setState({
+            job_rate_id: id,
+            showRating: true
+        })
+    }
+
+    appRate = (e) =>{
+        this.setState({rate: e.target.value})
+    }
+
+    rateSubmit = async (e , id) =>{
+        e.preventDefault()
+        const body ={
+            newRate: parseInt(this.state.rate)
+        }
+
+        console.log(body , id)
+
+        this.setState({loading: true , rate: 0 , job_rate_id: '' , showRating: false})
+
+        try{
+            await axios.put(`/api/applicants/jobrate/${id}` , body , {headers: {'x-auth-token': this.context.token}})
+
+            this.getData(this.context.token)
+        }
+        catch(err){
+            console.log(err.response.data)
+        }
+    }
+    
+    checkRate = (appl) =>{
+        let job = appl.job_id
+        if(appl.stage === 'accepted'){
+            if(job.ratings.find(r => {
+                if(r.app_id === this.context.user.id){
+                    return true
+                }
+        
+                return false
+            })){
+                return (
+                    <>
+                <span style={{position:'relative' , top:'-4.5px' , marginRight:'1rem'}}>{this.getRating(job.ratings)}</span>
+                </>
+                )
+            }
+            else{
+                return (
+                    <>
+                        <span style={{position:'relative' , top:'-4.5px' , marginRight:'1rem'}}>{this.getRating(job.ratings)}</span>
+                        <Button style={{marginLeft:'1rem' , position:'relative' , top:'-0.2rem'}} key="rate-open" onClick={(e) => this.openRating(job._id)}  type="button" variant="warning">Rate Job</Button>
+                    </>
+                )
+            }
+        }
+        else{
+            return (
+                <>
+            <span style={{position:'relative' , top:'-4.5px' , marginRight:'1rem'}}>{this.getRating(job.ratings)}</span>
+            </>
+            )
+        }
+        
+    }
 
     
     render() {
@@ -100,6 +188,25 @@ class AppApplications extends Component {
                     {this.state.errorMsg}
                     </Alert>
                 </Snackbar>
+
+                <Modal show={this.state.showRating} onHide={this.handleClose}>
+                    <Modal.Header closeButton>
+                    <Modal.Title><h2>Rate Employee</h2></Modal.Title>
+                    </Modal.Header>
+                    <Form onSubmit={(e) => this.rateSubmit(e , this.state.job_rate_id)}>
+                    <Modal.Body>
+                        <Form.Control required onChange={this.appRate} value={this.state.rate} type="number" min={0} max={5} />
+                    </Modal.Body>
+                    <Modal.Footer>
+                    <Button variant="secondary" type="button" onClick={this.handleClose}>
+                        Close
+                    </Button>
+                    <Button variant="warning" type="submit">
+                        Submit Rating
+                    </Button>
+                    </Modal.Footer>
+                    </Form>
+                </Modal>
 
                 <Container style={{marginTop:'3rem'}}>
                     <Row className="justify-content-md-center">
@@ -116,6 +223,7 @@ class AppApplications extends Component {
                             <th>Recruiter Name</th>
                             <th>Status</th>
                             <th>Rate</th>
+                            <th>Job status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -126,10 +234,10 @@ class AppApplications extends Component {
                                 <td>{appl.job_id.salary}</td>
                                 <td>{appl.recruiter_id.name}</td>
                                 <td>{makeButton(appl._id , appl.stage)}</td>
-                                <td valign='center'>
-                                    <span style={{position:'relative' , top:'-4.5px' , marginRight:'1rem'}}>{this.getRating(appl.job_id.ratings)}</span>
-                                    <Rating readOnly={appl.stage !== 'accepted'} value={this.getRating(appl.job_id.ratings)} precision={0.1}/>
+                                <td>
+                                   {this.checkRate(appl)} 
                                 </td>
+                                <td>{this.getJobState(appl.job_id)}</td>
                             </tr>
                             
                         ))}

@@ -91,6 +91,92 @@ router.get('/rec/:job_id' , auth , async (req,res) =>{
 // @desc  accept/reject/shortlist an application
 // @access Private
 
+// router.put('/:app_id' , auth , async (req,res) =>{
+
+//     const recruiter = await Recruiter.findById(req.user.id)
+//     if(!recruiter){
+//         return res.status(400).json({msg: 'Only Recruiter endpoint!'})
+//     }
+//     const {stage} = req.body
+//     const applicationToBeUpdated = await Application.findById(req.params.app_id)
+//     applicationToBeUpdated.stage = stage
+//     try{
+//         const updatedApplication = await applicationToBeUpdated.save()
+//         console.log('Application stage changed')
+//         if(updatedApplication.stage === 'rejected'){
+//             console.log('rejected if condition')
+//             await Applicant.findByIdAndUpdate(updatedApplication.applicant_id , {$inc: {num_applications: -1}})
+//             await Job.findByIdAndUpdate(updatedApplication.job_id , {$inc: {app: -1} , $set: {state: 'active'}})
+//             console.log('decreases from job and applicant')
+//         }
+//         else{
+//             if(updatedApplication.stage === 'accepted'){
+//                 console.log('accepted if condition')
+//                 await Application.findByIdAndUpdate(updatedApplication._id , {$set: {date_join: Date.now()}})
+//                 console.log('date of joining done')
+//                 const applicationsToReject = await Application.find({applicant_id: updatedApplication.applicant_id , stage: {$in: ['applied','shortlisted']}})
+//                 console.log('applications to reject found')
+//                 console.log(applicationsToReject)
+//                 for(i=0; i<applicationsToReject.length; i++){
+//                     var appl = applicationsToReject[i]
+//                     console.log('currently rejecting..')
+//                     console.log(appl)
+//                     appl.stage = 'rejected'
+//                     await appl.save()
+//                     console.log('appl rejected')
+//                     await Applicant.findByIdAndUpdate(appl.applicant_id , {$inc: {num_applications: -1}})
+//                     await Job.findByIdAndUpdate(appl.job_id , {$inc: {app: -1} , $set: {state: 'active'}})
+//                     console.log('appl ke job and applicant updated')  
+
+//                 }
+
+//                 console.log('other applications rejected')
+
+                
+//                 await Recruiter.findByIdAndUpdate(updatedApplication.recruiter_id , {$push: {employees: updatedApplication._id}})
+//                 await Applicant.findByIdAndUpdate(updatedApplication.applicant_id , {$set: {state: 'gotJob'} , $inc: {num_applications: -1}})
+//                 jobToJoin = await Job.findById(updatedApplication.job_id)
+//                 if(jobToJoin.pos == jobToJoin.max_pos){
+//                     return res.status(400).json({msg: 'Maximum number of positions for job!'})
+//                 }
+
+//                 const updatedJob = await Job.findByIdAndUpdate(updatedApplication.job_id , {$inc: {pos: 1 , app: -1}} , {new : true})
+//                 console.log('JOB POSITIONS ARE NOW' , updatedJob.pos , 'MAX POSITIONS ARE' , updatedJob.max_pos)
+//                 if(updatedJob.pos == updatedJob.max_pos){
+//                     await Job.findByIdAndUpdate(updatedApplication.job_id , {$set: {state: 'posFilled'}} , {new : true})
+//                     const applicationsHaveToReject = await Application.find({job_id: updatedApplication.job_id , stage: {$in: ['applied','shortlisted']}})
+//                     for(i=0; i<applicationsHaveToReject.length; i++){
+//                         var appl = applicationsHaveToReject[i]
+//                         console.log('currently rejecting..')
+//                         console.log(appl)
+//                         appl.stage = 'rejected'
+//                         await appl.save()
+//                         console.log('appl rejected')
+//                         await Applicant.findByIdAndUpdate(appl.applicant_id , {$inc: {num_applications: -1}})
+//                         await Job.findByIdAndUpdate(appl.job_id , {$inc: {app: -1}})
+//                         console.log('appl ke job and applicant updated')  
+    
+//                     }
+
+//                 }
+//                 else{
+//                     await Job.findByIdAndUpdate(updatedApplication.job_id , {$set: {state: 'active'}})
+//                 }
+
+                
+
+//                 console.log('employee added to recruiter')
+//             }
+//         }
+
+//         return res.json(updatedApplication)
+//     }
+//     catch(err){
+//         res.status(500).json(err.message)
+//     }
+
+// });
+
 router.put('/:app_id' , auth , async (req,res) =>{
 
     const recruiter = await Recruiter.findById(req.user.id)
@@ -98,82 +184,55 @@ router.put('/:app_id' , auth , async (req,res) =>{
         return res.status(400).json({msg: 'Only Recruiter endpoint!'})
     }
     const {stage} = req.body
-    const applicationToBeUpdated = await Application.findById(req.params.app_id)
-    applicationToBeUpdated.stage = stage
-    try{
-        const updatedApplication = await applicationToBeUpdated.save()
-        console.log('Application stage changed')
-        if(updatedApplication.stage === 'rejected'){
-            console.log('rejected if condition')
-            await Applicant.findByIdAndUpdate(updatedApplication.applicant_id , {$inc: {num_applications: -1}})
-            await Job.findByIdAndUpdate(updatedApplication.job_id , {$inc: {app: -1} , $set: {state: 'active'}})
-            console.log('decreases from job and applicant')
+    try {
+        if(stage === 'shortlisted'){
+            console.log('SHORTLSITING')
+            const updatedApplication = await Application.findByIdAndUpdate(req.params.app_id , {$set: {stage: stage}} , {new: true})
+            return res.json(updatedApplication)
         }
-        else{
-            if(updatedApplication.stage === 'accepted'){
-                console.log('accepted if condition')
-                await Application.findByIdAndUpdate(updatedApplication._id , {$set: {date_join: Date.now()}})
-                console.log('date of joining done')
-                const applicationsToReject = await Application.find({applicant_id: updatedApplication.applicant_id , stage: {$in: ['applied','shortlisted']}})
-                console.log('applications to reject found')
-                console.log(applicationsToReject)
-                for(i=0; i<applicationsToReject.length; i++){
-                    var appl = applicationsToReject[i]
-                    console.log('currently rejecting..')
-                    console.log(appl)
-                    appl.stage = 'rejected'
-                    await appl.save()
-                    console.log('appl rejected')
-                    await Applicant.findByIdAndUpdate(appl.applicant_id , {$inc: {num_applications: -1}})
-                    await Job.findByIdAndUpdate(appl.job_id , {$inc: {app: -1} , $set: {state: 'active'}})
-                    console.log('appl ke job and applicant updated')  
-
-                }
-
-                console.log('other applications rejected')
-
-                
-                await Recruiter.findByIdAndUpdate(updatedApplication.recruiter_id , {$push: {employees: updatedApplication._id}})
-                await Applicant.findByIdAndUpdate(updatedApplication.applicant_id , {$set: {state: 'gotJob'} , $inc: {num_applications: -1}})
-                jobToJoin = await Job.findById(updatedApplication.job_id)
-                if(jobToJoin.pos == jobToJoin.max_pos){
-                    return res.status(400).json({msg: 'Maximum number of positions for job!'})
-                }
-
-                const updatedJob = await Job.findByIdAndUpdate(updatedApplication.job_id , {$inc: {pos: 1 , app: -1}} , {new : true})
-                console.log('JOB POSITIONS ARE NOW' , updatedJob.pos , 'MAX POSITIONS ARE' , updatedJob.max_pos)
-                if(updatedJob.pos == updatedJob.max_pos){
-                    await Job.findByIdAndUpdate(updatedApplication.job_id , {$set: {state: 'posFilled'}} , {new : true})
-                    const applicationsHaveToReject = await Application.find({job_id: updatedApplication.job_id , stage: {$in: ['applied','shortlisted']}})
-                    for(i=0; i<applicationsHaveToReject.length; i++){
-                        var appl = applicationsHaveToReject[i]
-                        console.log('currently rejecting..')
-                        console.log(appl)
-                        appl.stage = 'rejected'
-                        await appl.save()
-                        console.log('appl rejected')
-                        await Applicant.findByIdAndUpdate(appl.applicant_id , {$inc: {num_applications: -1}})
-                        await Job.findByIdAndUpdate(appl.job_id , {$inc: {app: -1}})
-                        console.log('appl ke job and applicant updated')  
-    
-                    }
-
-                }
-                else{
-                    await Job.findByIdAndUpdate(updatedApplication.job_id , {$set: {state: 'active'}})
-                }
-
-                
-
-                console.log('employee added to recruiter')
+        else if(stage === 'rejected'){
+            console.log('REJECTING')
+            const updatedApplication = await Application.findByIdAndUpdate(req.params.app_id , {$set : {stage: stage}} , {new: true})
+            await Applicant.findByIdAndUpdate(updatedApplication.applicant_id , {$inc: {num_applications : -1}})
+            const updatedJob = await Job.findByIdAndUpdate(updatedApplication.job_id , {$inc: {app: -1}})
+            if(updatedJob.app < updatedJob.max_app && updatedJob.pos < updatedJob.max_pos){
+                await Job.findByIdAndUpdate(updatedApplication.job_id , {$set : {state: 'active'}})
             }
-        }
 
-        return res.json(updatedApplication)
-    }
-    catch(err){
+            return res.json(updatedApplication)
+        }
+        else if(stage === 'accepted'){
+            const updatedApplication = await Application.findByIdAndUpdate(req.params.app_id , {$set : {stage: stage , date_join: Date.now()}} , {new: true})
+            const applicantJoined = await Applicant.findByIdAndUpdate(updatedApplication.applicant_id , {$set: {state: 'gotJob' , num_applications: 0}})
+            await Recruiter.findByIdAndUpdate(updatedApplication.recruiter_id , {$push: {employees: updatedApplication._id}})
+            const joinedJob = await Job.findByIdAndUpdate(updatedApplication.job_id , {$inc: {pos: 1 , app: -1}} , {new: true})
+            const applicationFilter = ['applied' , 'shortlisted']
+            const otherApplicantApplications = await Application.find({applicant_id: applicantJoined._id , stage: {$in: applicationFilter}})
+            const otherApplicantApplicationIds = otherApplicantApplications.map(appl => appl._id)
+            const otherApplicantApplicationJobIds = otherApplicantApplications.map(appl => appl.job_id)
+            await Application.updateMany({_id: {$in: otherApplicantApplicationIds}} , {$set: {stage: 'rejected'}})
+            await Job.updateMany({_id: {$in : otherApplicantApplicationJobIds}} , {$inc: {app: -1} , $set: {state: 'active'}})
+            if(joinedJob.pos === joinedJob.max_pos){
+                const inactiveJob = await Job.findByIdAndUpdate(joinedJob._id , {$set: {state: 'posFilled'}})
+                const otherJobApplications = await Application.find({job_id: inactiveJob._id , stage: {$in: applicationFilter}})
+                const num_to_reject = -1 * otherJobApplications.length
+                await Job.findByIdAndUpdate(inactiveJob._id , {$inc: {app: num_to_reject}})
+                const otherJobApplicationIds = otherJobApplications.map(appl => appl._id)
+                const otherJobApplicantIds = otherJobApplications.map(appl => appl.applicant_id)
+                await Application.updateMany({_id: {$in: otherJobApplicationIds}} , {$set: {stage: 'rejected'}})
+                await Applicant.updateMany({_id: {$in: otherJobApplicantIds}} , {$inc: {num_applications: -1}})
+            }
+            else{
+                await Job.findByIdAndUpdate(joinedJob._id , {$set: {state: 'active'}})
+            }
+
+            return res.json(updatedApplication)
+
+        }
+    } catch (err) {
         res.status(500).json(err.message)
     }
+    
 
 });
 

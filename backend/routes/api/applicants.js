@@ -139,7 +139,7 @@ router.put('/jobrate/:job_id' , auth, async (req,res) =>{
     })
 
     try{
-        const updatedJob = await applicantToRate.save()
+        const updatedJob = await jobToRate.save()
         res.json(updatedJob)
     }
     catch(err){
