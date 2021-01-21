@@ -112,10 +112,27 @@ router.post('/profile' , auth, async (req,res) =>{
     
 });
 
+// @route POST api/applicants/imgUpload
+// @desc  upload profile pic
+// @access Private
+
+router.post('/imgUpload' , auth , async (req,res) => {
+    const {base64} = req.body
+    console.log('RECIEVED' , base64[0])
+    try{
+        await Applicant.findByIdAndUpdate(req.user.id , {profile_img : base64})
+        res.json({msg: 'success'})
+    }
+    catch(err){
+        res.status(500).json({msg: err.message})
+    }
+    
+})
+
 // @route PUT api/applicants/jobrate
 // @desc  rate a job
 // @access Private
-
+ 
 router.put('/jobrate/:job_id' , auth, async (req,res) =>{
     const {newRate} = req.body
     const jobToRate = await Job.findById(req.params.job_id)

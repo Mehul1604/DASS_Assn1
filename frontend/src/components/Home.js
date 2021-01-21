@@ -48,7 +48,7 @@ class Home extends Component {
             return (
                 <div>   
                     <Container component='div' style={{backgroundColor:'#cfe8fc', height:'250px' , borderRadius:'5%' , position:'relative' , top:'1rem'}} maxWidth='sm'>
-                        <h1 style={{marginLeft:'2.5rem' , position:'relative' , top:'3rem' , fontSize:'3rem'}}>Welcome to Job Portal</h1>
+                        <h1 style={{marginLeft:'2.5rem' , position:'relative' , top:'3rem' , fontSize:'3rem'}}>Welcome to JobMart</h1>
                         {/* <Link to='/register'> */}
                         <Button 
                             variant="contained"

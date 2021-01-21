@@ -36,7 +36,7 @@ export default class AppNavbar extends Component{
             <div>
             <Navbar color="primary"  light  expand="sm" className="mb-2">
                 <Container>
-                    <NavbarBrand style={{color:'white'}} href="/">Job Portal</NavbarBrand>
+                    <NavbarBrand style={{color:'white'}} href="/">JobMart</NavbarBrand>
                     <NavbarToggler onClick={this.toggle}></NavbarToggler>
                     <Collapse isOpen={this.state.isOpen} navbar>
                         <Nav className="ml-auto" navbar>

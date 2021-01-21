@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import {Link} from 'react-router-dom'
 import {Container , Grid , Paper , TextField , Snackbar} from '@material-ui/core'
+import {Form} from 'react-bootstrap'
 import {Button} from 'react-bootstrap'
 import MuiAlert from '@material-ui/lab/Alert'
 import UserContext from '../context/UserContext'
@@ -62,43 +63,50 @@ class ApplicantProfile extends Component {
         education: [],
         skills: [],
         work: null,
+        canUpload: false,
+        file: null,
+        base64: "",
         loading: true,
         canEditName: false,
         canEditEducation: false,
         canEditSkills: false,
-        validOpen: false
+        validOpen: false,
+        errorMsg: ''
     }
 
     // nameRef = React.createRef()
 
     componentDidMount(){
-        const getApplicant = async (token) => {
-            try{
-                console.log('making axios now'  )
-                const applicant = await axios.get('/api/auth/app/user' , {headers: {'x-auth-token' : token}})
-                this.setState({
-                    userOrig: applicant.data,
-                    name: applicant.data.name,
-                    email: applicant.data.name,
-                    applications: applicant.data.num_applications,
-                    work: applicant.data.state === 'gotJob' ? applicant.data.application_ids.filter(app => app.stage === 'accepted')[0].job_id.title : null,
-                    rating: this.getRating(applicant.data.ratings),
-                    status: applicant.data.state === 'active' ? 'Unemployed' : 'Employed',
-                    education: applicant.data.education.map(appEdu => { return {...appEdu , tempId: generate()}}),
-                    skills: applicant.data.skills
-                })
-            }
-            catch(err){
-                console.log(err.response.data)
-                this.context.logOut()
-                this.props.history.push('/')
-            }
-            finally{
-                this.setState({loading:false})
-            }
-        }
         
-        getApplicant(this.context.token)
+        
+        this.getApplicant(this.context.token)
+    }
+
+    getApplicant = async (token) => {
+        try{
+            console.log('making axios now'  )
+            const applicant = await axios.get('/api/auth/app/user' , {headers: {'x-auth-token' : token}})
+            this.setState({
+                userOrig: applicant.data,
+                name: applicant.data.name,
+                email: applicant.data.name,
+                applications: applicant.data.num_applications,
+                work: applicant.data.state === 'gotJob' ? applicant.data.application_ids.filter(app => app.stage === 'accepted')[0].job_id.title : null,
+                base64: applicant.data.profile_img ? applicant.data.profile_img : "",
+                rating: this.getRating(applicant.data.ratings),
+                status: applicant.data.state === 'active' ? 'Unemployed' : 'Employed',
+                education: applicant.data.education.map(appEdu => { return {...appEdu , tempId: generate()}}),
+                skills: applicant.data.skills
+            })
+        }
+        catch(err){
+            console.log(err.response.data)
+            this.context.logOut()
+            this.props.history.push('/')
+        }
+        finally{
+            this.setState({loading:false})
+        }
     }
 
     onNameChange = (e) =>{
@@ -173,7 +181,8 @@ class ApplicantProfile extends Component {
             if(ey){
                 if(ey < sy){
                     this.setState({
-                        validOpen: true
+                        validOpen: true,
+                        errorMsg: 'End Year should be greater than start year'
                     })
                     return
                 }
@@ -221,6 +230,7 @@ class ApplicantProfile extends Component {
         const body = {skills: this.state.skills}
         try{
             await axios.post('/api/applicants/profile' , body , {headers: {'x-auth-token': this.context.token}})
+            
         }
         catch(err){
             console.log(err.response.data)
@@ -235,7 +245,7 @@ class ApplicantProfile extends Component {
           return;
         }
     
-        this.setState({validOpen: false})
+        this.setState({validOpen: false , errorMsg: ''})
       };
 
       getRating = (ratings_list) =>{
@@ -248,15 +258,81 @@ class ApplicantProfile extends Component {
 
         return sum/n
     }
+
+    convert64 = (file) => {
+        return new Promise((resolve , reject) => {
+            const fileReader = new FileReader()
+            fileReader.readAsDataURL(file)
+
+            fileReader.onload = () =>{
+                resolve(fileReader.result)
+            }
+
+            fileReader.onerror = (err) =>{
+                reject(err)
+            }
+        })
+    }
+    editPhoto = (e) =>{
+        this.setState({canUpload: true})
+    }
+
+    chooseFile = (e) =>{
+        this.setState({file: e.target.files[0]})
+    }
+
+    submitPhoto = async (e) =>{
+        if(!this.state.file){
+            this.setState({
+                validOpen: true,
+                errorMsg: 'No Image uploaded'
+            })
+            return
+        }
+        console.log(this.state.file)
+        const base64 = await this.convert64(this.state.file)
+        // console.log(base64)
+        this.setState({loading: true , validOpen: false , errorMsg: '' , file: null , canUpload: false})
+        const body = {
+            base64: base64
+        }
+        try{
+            await axios.post('api/applicants/imgUpload' , body , {headers: {'x-auth-token': this.context.token}})
+            this.getApplicant(this.context.token)
+        }
+        catch(err){
+            console.log(err.message)
+        }
+        
+    }
+
+    cancelPhoto = (e) =>{
+        this.setState({canUpload: false , file: null})
+    }
+
+    delPhoto = async (e) =>{
+        this.setState({loading: true , validOpen: false , errorMsg: '' , file: null , canUpload: false})
+        const body = {
+            base64: ""
+        }
+        try{
+            await axios.post('api/applicants/imgUpload' , body , {headers: {'x-auth-token': this.context.token}})
+            this.getApplicant(this.context.token)
+        }
+        catch(err){
+            console.log(err.message)
+        }
+    }
     //   onClick={this.editName} style={{marginTop:'1rem' , marginLeft:'1rem'}}
     render() {
         // console.log('CONTEXT LOOKS LIKE' , this.context)
+        // console.log(this.state)
         return this.state.loading ? <Loader type="Circles" color='blue' radius height={200} width={200} style={{marginLeft:'43%' , marginTop:'20%'}}/> : (
             
             <div className="container" style={{  marginTop:'2rem'}}>
                 <Snackbar open={this.state.validOpen} autoHideDuration={5000} onClose={this.handleClose}>
                     <Alert onClose={this.handleClose} severity="error">
-                    End Year should be greater than Start year
+                    {this.state.errorMsg}
                     </Alert>
                 </Snackbar>
                   
@@ -344,6 +420,26 @@ class ApplicantProfile extends Component {
                                     )) : 'Add Skills'} */}
                                     <Select  isDisabled={!this.state.canEditSkills} className="dropdown" placeholder="Select skill" value={predefSkills.filter(obj => this.state.skills.includes(obj.label))} options={predefSkills} onChange={this.skillChange} isMulti/>
                                     {!this.state.canEditSkills ? (<Button variant="primary" key="edit-button-skill" style={{marginTop:'1rem'}} type="button" onClick={this.editSkill}>Edit</Button>) : (<Button variant="success" onClick={this.skillSubmit}  style={{marginTop:'1rem'}}>Submit</Button>)}
+                                    
+                                </div>
+                            </Grid>
+                            <Grid  item>
+                                <div>
+                                    <h3>Profile Picture</h3>
+                                    {!(this.state.base64 === "") ? <img src={this.state.base64} width="200px" height="200px"/> : "No Image Uploaded"}
+                                    {!this.state.canUpload ? (
+                                        <>
+                                        
+                                        <Button key="choose-photo" style={{marginLeft: '1rem'}} onClick={this.editPhoto} variant="primary">Upload/Change Profile Photo</Button>
+                                        {!(this.state.base64 === "") ? <Button key="del-photo" onClick={this.delPhoto} style={{marginLeft: '1rem'}} variant="warning">Delete Photo</Button> : ""}
+                                        </>
+                                    ) : (
+                                        <>
+                                        <Form.Control style={{marginTop: '1rem'}} onChange={this.chooseFile} type="file"/>
+                                        <Button style={{marginLeft: '1rem' , marginTop: '1rem'}} key="submit-photo" onClick={this.submitPhoto} variant="success">Upload</Button>
+                                        <Button style={{marginLeft: '1rem' , marginTop: '1rem'}} key="cancel-photo" onClick ={this.cancelPhoto} variant="danger">Cancel</Button>
+                                    </>
+                                    )}
                                     
                                 </div>
                             </Grid>

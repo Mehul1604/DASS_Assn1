@@ -1,7 +1,8 @@
 import React, {Component} from 'react';
 import {Link} from 'react-router-dom'
-import {Container ,Grid , Paper , TextField} from '@material-ui/core'
-import {Button} from 'react-bootstrap'
+import {Container ,Grid , Paper , TextField , Snackbar} from '@material-ui/core'
+import {Button , Form} from 'react-bootstrap'
+import MuiAlert from '@material-ui/lab/Alert'
 import ReceiptIcon from '@material-ui/icons/Receipt';
 import WorkIcon from '@material-ui/icons/Work';
 import UserContext from '../context/UserContext'
@@ -11,6 +12,10 @@ import Loader from 'react-loader-spinner';
 // import {connect} from 'react-redux'
 // import PropTypes from 'prop-types'
 // import {loadUser} from '../actions/authActions'
+
+function Alert(props) {
+    return <MuiAlert elevation={6} variant="filled" {...props} />;
+  }
 
 class RecruiterProfile extends Component {
     
@@ -23,39 +28,46 @@ class RecruiterProfile extends Component {
         bio: null,
         employees: null,
         jobs: null,
+        canUpload: false,
+        file: null,
+        base64: "",
         loading: true,
         canEditName: false,
         canEditContact: false,
-        canEditBio: false
+        canEditBio: false,
+        validOpen: false,
+        errorMsg: ''
     }
 
     // nameRef = React.createRef()
+    getRecruiter = async (token) => {
+        try{
+            console.log('making axios now'  )
+            const recruiter = await axios.get('/api/auth/rec/user' , {headers: {'x-auth-token' : token}})
+            this.setState({
+                name: recruiter.data.name,
+                email: recruiter.data.name,
+                contact: recruiter.data.contact,
+                bio: recruiter.data.bio,
+                base64: recruiter.data.profile_img ? recruiter.data.profile_img : "",
+                employees: recruiter.data.employees.length,
+                jobs: recruiter.data.job_ids.length
+            })
+        }
+        catch(err){
+            console.log(err.response.data)
+            this.context.logOut()
+            this.props.history.push('/')
+        }
+        finally{
+            this.setState({loading:false})
+        }
+    }
 
     componentDidMount(){
-        const getRecruiter = async (token) => {
-            try{
-                console.log('making axios now'  )
-                const recruiter = await axios.get('/api/auth/rec/user' , {headers: {'x-auth-token' : token}})
-                this.setState({
-                    name: recruiter.data.name,
-                    email: recruiter.data.name,
-                    contact: recruiter.data.contact,
-                    bio: recruiter.data.bio,
-                    employees: recruiter.data.employees.length,
-                    jobs: recruiter.data.job_ids.length
-                })
-            }
-            catch(err){
-                console.log(err.response.data)
-                this.context.logOut()
-                this.props.history.push('/')
-            }
-            finally{
-                this.setState({loading:false})
-            }
-        }
+       
         
-        getRecruiter(this.context.token)
+        this.getRecruiter(this.context.token)
     }
 
     onNameChange = (e) =>{
@@ -106,6 +118,8 @@ class RecruiterProfile extends Component {
         
     }
 
+
+
     submitContact = async (e) =>{
         e.preventDefault()
         this.setState({loading: true})
@@ -141,12 +155,83 @@ class RecruiterProfile extends Component {
         
     }
 
+    convert64 = (file) => {
+        return new Promise((resolve , reject) => {
+            const fileReader = new FileReader()
+            fileReader.readAsDataURL(file)
+
+            fileReader.onload = () =>{
+                resolve(fileReader.result)
+            }
+
+            fileReader.onerror = (err) =>{
+                reject(err)
+            }
+        })
+    }
+    editPhoto = (e) =>{
+        this.setState({canUpload: true})
+    }
+
+    chooseFile = (e) =>{
+        this.setState({file: e.target.files[0]})
+    }
+
+    submitPhoto = async (e) =>{
+        if(!this.state.file){
+            this.setState({
+                validOpen: true,
+                errorMsg: 'No Image uploaded'
+            })
+            return
+        }
+        console.log(this.state.file)
+        const base64 = await this.convert64(this.state.file)
+        // console.log(base64)
+        this.setState({loading: true , validOpen: false , errorMsg: '' , file: null , canUpload: false})
+        const body = {
+            base64: base64
+        }
+        try{
+            await axios.post('api/recruiters/imgUpload' , body , {headers: {'x-auth-token': this.context.token}})
+            this.getRecruiter(this.context.token)
+        }
+        catch(err){
+            console.log(err.message)
+        }
+        
+    }
+
+    cancelPhoto = (e) =>{
+        this.setState({canUpload: false , file: null})
+    }
+
+    delPhoto = async (e) =>{
+        this.setState({loading: true , validOpen: false , errorMsg: '' , file: null , canUpload: false})
+        const body = {
+            base64: ""
+        }
+        try{
+            await axios.post('api/recruiters/imgUpload' , body , {headers: {'x-auth-token': this.context.token}})
+            this.getRecruiter(this.context.token)
+        }
+        catch(err){
+            console.log(err.message)
+        }
+    }
+
     
 
     render() {
         // console.log(this.context)
         return this.state.loading ? <Loader type="Circles" color='blue' radius height={200} width={200} style={{marginLeft:'43%' , marginTop:'20%'}}/> : (
             <div className="container" style={{  marginTop:'2rem'}}>
+
+                <Snackbar open={this.state.validOpen} autoHideDuration={5000} onClose={this.handleClose}>
+                    <Alert onClose={this.handleClose} severity="error">
+                    {this.state.errorMsg}
+                    </Alert>
+                </Snackbar>
                   
                 <Grid container spacing={5}>
                     <Grid style={{paddingLeft:'2rem'}} item xs={5}>
@@ -196,6 +281,26 @@ class RecruiterProfile extends Component {
                             <Grid item>
                                 <h3>Jobs</h3>
                                 {this.state.jobs}
+                            </Grid>
+                            <Grid  item>
+                                <div>
+                                    <h3>Profile Picture</h3>
+                                    {!(this.state.base64 === "") ? <img src={this.state.base64} width="200px" height="200px"/> : "No Image Uploaded"}
+                                    {!this.state.canUpload ? (
+                                        <>
+                                        
+                                        <Button key="choose-photo" style={{marginLeft: '1rem'}} onClick={this.editPhoto} variant="primary">Upload/Change Profile Photo</Button>
+                                        {!(this.state.base64 === "") ? <Button key="del-photo" onClick={this.delPhoto} style={{marginLeft: '1rem'}} variant="warning">Delete Photo</Button> : ""}
+                                        </>
+                                    ) : (
+                                        <>
+                                        <Form.Control style={{marginTop: '1rem'}} onChange={this.chooseFile} type="file"/>
+                                        <Button style={{marginLeft: '1rem' , marginTop: '1rem'}} key="submit-photo" onClick={this.submitPhoto} variant="success">Upload</Button>
+                                        <Button style={{marginLeft: '1rem' , marginTop: '1rem'}} key="cancel-photo" onClick ={this.cancelPhoto} variant="danger">Cancel</Button>
+                                    </>
+                                    )}
+                                    
+                                </div>
                             </Grid>
                         </Grid>
                     </Grid>

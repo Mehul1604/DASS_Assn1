@@ -97,7 +97,7 @@ router.post('/profile' , auth, async (req,res) =>{
     if(newValues.contact){        
         recruiterToChange.contact = newValues.contact
     }
-    if(newValues.bio === null || newValues.bio === undefined){
+    if(!(newValues.bio === null || newValues.bio === undefined)){
         recruiterToChange.bio = newValues.bio
     }
 
@@ -110,6 +110,24 @@ router.post('/profile' , auth, async (req,res) =>{
     }
     
 });
+
+// @route POST api/recruiters/imgUpload
+// @desc  upload profile pic
+// @access Private
+
+router.post('/imgUpload' , auth , async (req,res) => {
+    const {base64} = req.body
+    console.log('RECIEVED' , base64[0])
+    try{
+        await Recruiter.findByIdAndUpdate(req.user.id , {profile_img : base64})
+        res.json({msg: 'success'})
+    }
+    catch(err){
+        res.status(500).json({msg: err.message})
+    }
+    
+})
+
 
 // @route GET api/recruiters/emps
 // @desc  get all employees

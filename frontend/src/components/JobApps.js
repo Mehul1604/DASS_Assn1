@@ -167,6 +167,13 @@ class JobApps extends Component {
         this.setState({loading:true})
         
         try{
+            if(newStage === 'accepted'){
+                const mailBody = {
+                    recruiterName: this.context.user.name,
+                    applicationId: id
+                }
+                await axios.post('/api/sendMail' , mailBody , {headers : {'x-auth-token': this.context.token}})
+            }
             await axios.put(`/api/applications/${id}` , body , {headers: {'x-auth-token': this.context.token}})
 
             this.getData(this.context.token)
@@ -195,7 +202,7 @@ class JobApps extends Component {
     //   onClick={this.editName} style={{marginTop:'1rem' , marginLeft:'1rem'}}
     render() {
 
-
+        console.log(this.context)
         // console.log("STATE ON THIS RENDER IS" , this.state)
         return this.state.loading ? <Loader type="Circles" color='blue' radius height={200} width={200} style={{marginLeft:'43%' , marginTop:'20%'}}/> : (
             <div>

@@ -29,6 +29,10 @@ const RecruiterSchema = new Schema({
         type: String,
         default: ''
     },
+    profile_img: {
+        type: String,
+        default: ""
+    },
     employees: {
         type: [
             {

@@ -56,6 +56,10 @@ const ApplicantSchema = new Schema({
         ],
         default: []
     },
+    profile_img: {
+        type: String,
+        default: ""
+    },
     num_applications: {
         type:Number,
         max:10,

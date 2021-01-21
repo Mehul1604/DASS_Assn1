@@ -4,6 +4,7 @@ const mongoose = require('mongoose')
 const config = require('config')
 const path = require('path')
 const jwt = require('jsonwebtoken')
+const nodemailer = require('nodemailer')
 
 const app = express()
 app.use(express.json());
@@ -17,6 +18,7 @@ const applications = require('./routes/api/applications')
 const Applicant = require('./models/Applicant')
 const Recruiter = require('./models/Recruiter')
 const auth = require('./middleware/auth')
+const Job = require('./models/Job')
 
 const db = config.get('mongoURI')
 
@@ -28,6 +30,8 @@ mongoose.connect(db , { useNewUrlParser: true , useUnifiedTopology: true })
 
 
 app.post('/api/tokenValid' , async (req,res) => {
+
+    
     try{
         const token = req.header('x-auth-token')
         if(!token){
@@ -78,6 +82,51 @@ app.get('/api/user' , auth , async (req, res) => {
     } catch (err) {
         res.status(500).json(err.message)
     }
+})
+
+app.post('/api/sendMail' , auth ,  async (req,res) => {
+
+    const recruiter = await Recruiter.findById(req.user.id)
+    if(!recruiter){
+        return res.status(400).json({msg: 'Only Recruiter endpoint!'})
+    }
+    
+
+    const {recruiterName , applicationId} = req.body 
+    try{
+        const applicationAccepted = await Application.findById(applicationId)
+        // console.log(applicationAccepted)
+        const jobJoined = await Job.findById(applicationAccepted.job_id)
+        const jobName = jobJoined.title
+        const applicantJoined = await Applicant.findById(applicationAccepted.applicant_id)
+        const applicantEmail = applicantJoined.email
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            port: 587,
+            secure: false,
+            auth: {
+                user: "jobmart1234@gmail.com",
+                pass: "dassjobmart1234"
+            }
+        })
+        
+        
+        const info = await transporter.sendMail({
+            from: "jobmart1234@gmail.com",
+            to: `${applicantEmail}`,
+            subject: "JobMart Application Accepted",
+            html: `<b>${recruiterName} has accepted you for the job ${jobName}. Congratulations , hope you enjoyed the service at Job Mart</b>`
+        })
+
+        
+
+        res.json(info.response)
+    }
+    catch(err){
+        res.status(500).json({msg: err.message})
+    }
+    
+
 })
 
 app.use('/api/jobs' , jobs)
