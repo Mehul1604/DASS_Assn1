@@ -46,7 +46,7 @@ class RecruiterProfile extends Component {
             const recruiter = await axios.get('/api/auth/rec/user' , {headers: {'x-auth-token' : token}})
             this.setState({
                 name: recruiter.data.name,
-                email: recruiter.data.name,
+                email: recruiter.data.email,
                 contact: recruiter.data.contact,
                 bio: recruiter.data.bio,
                 base64: recruiter.data.profile_img ? recruiter.data.profile_img : "",

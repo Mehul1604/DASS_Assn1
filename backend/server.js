@@ -119,7 +119,7 @@ app.post('/api/sendMail' , auth ,  async (req,res) => {
         })
 
         
-
+        console.log(info.response)
         res.json(info.response)
     }
     catch(err){

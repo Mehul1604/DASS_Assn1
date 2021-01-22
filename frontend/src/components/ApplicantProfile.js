@@ -89,7 +89,7 @@ class ApplicantProfile extends Component {
             this.setState({
                 userOrig: applicant.data,
                 name: applicant.data.name,
-                email: applicant.data.name,
+                email: applicant.data.email,
                 applications: applicant.data.num_applications,
                 work: applicant.data.state === 'gotJob' ? applicant.data.application_ids.filter(app => app.stage === 'accepted')[0].job_id.title : null,
                 base64: applicant.data.profile_img ? applicant.data.profile_img : "",
