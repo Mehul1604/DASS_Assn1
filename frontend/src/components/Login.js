@@ -1,17 +1,13 @@
 import React, {Component} from 'react';
 import axios from 'axios'
-import {TextField , Container ,Button , MenuItem , Snackbar , InputAdornment} from '@material-ui/core'
+import {TextField , Container ,Button ,  Snackbar , InputAdornment} from '@material-ui/core'
 import MuiAlert from '@material-ui/lab/Alert'
-import HowToRegIcon from '@material-ui/icons/HowToReg';
 import EmailIcon from '@material-ui/icons/Email';
 import LockIcon from '@material-ui/icons/Lock';
 import VpnKeyIcon from '@material-ui/icons/VpnKey';
 import UserContext from '../context/UserContext'
 
-// import {connect} from 'react-redux'
-// import {login , setNull , loadUser} from '../actions/authActions'
-// import {clearErrors} from '../actions/errorActions'
-// import PropTypes from 'prop-types'
+
 import { Redirect } from 'react-router-dom';
 
 
@@ -33,54 +29,8 @@ class Login extends Component {
 
     static contextType = UserContext
 
-    // static propTypes = {
-    //     isAuthenticated: PropTypes.bool,
-    //     error: PropTypes.object.isRequired,
-    //     login: PropTypes.func.isRequired,
-    //     clearErrors: PropTypes.func.isRequired,
-    //     setNull: PropTypes.func.isRequired,
-    //     loadUser: PropTypes.func.isRequired
+   
 
-    // }
-
-    // componentDidMount = () =>{
-    //     if(this.props.isAuthenticated){
-    //         this.setState({authDone: true})
-    //     }
-    //     this.props.loadUser()
-    // }
-
-    // componentDidUpdate = (prevProps) =>{
-    //     const {error , isAuthenticated} = this.props
-    //     console.log('The new props are' , error , isAuthenticated)
-    //     // if(!error.id && !error.status && error.msg === '' && !isAuthenticated){
-    //     //     return
-    //     // }
-        
-    //     if(error !== prevProps.error){
-    //         if(error.id === 'LOGIN_FAIL'){
-    //             this.setState({
-    //                 validOpen: true,
-    //                 errorMsg: error.msg,
-    //                 authDone: false
-    //             })
-    //         }
-    //         else{
-    //             this.setState({
-    //                 validOpen: false,
-    //                 errorMsg: ''
-    //             })
-    //         }
-    //     }
-    //     else{
-    //         if(isAuthenticated){
-    //             console.log('Logged in now')
-    //             this.setState({authDone: true}) 
-    //         }
-    //     }
-        
-        
-    // }
 
     onChange = (e) =>{
         this.setState({[e.target.name] : e.target.value})
@@ -209,9 +159,6 @@ class Login extends Component {
     }
 }
 
-// const mapStateToProps = (state) =>({
-//     isAuthenticated: state.auth.isAuthenticated,
-//     error: state.error
-// })
+
 
 export default Login

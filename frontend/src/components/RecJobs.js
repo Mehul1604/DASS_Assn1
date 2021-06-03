@@ -1,19 +1,14 @@
 import React, {Component} from 'react';
-import {Link} from 'react-router-dom'
 import {Snackbar} from '@material-ui/core'
-import {Table , Container, Row, Form, Col, Button , Modal , InputGroup} from 'react-bootstrap'
-import {Search} from 'react-bootstrap-icons'
+import {Table , Container, Row, Form,  Button , Modal } from 'react-bootstrap'
 import MuiAlert from '@material-ui/lab/Alert'
-import Rating from '@material-ui/lab/Rating'
 import UserContext from '../context/UserContext'
 import axios from 'axios';
 import Loader from 'react-loader-spinner';
-import Fuse from 'fuse.js'
 
 
-// import {connect} from 'react-redux'
-// import PropTypes from 'prop-types'
-// import {loadUser} from '../actions/authActions'
+
+
 
 function Alert(props) {
     return <MuiAlert elevation={6} variant="filled" {...props} />;
@@ -51,7 +46,6 @@ class RecJobs extends Component {
         loading: true
     }
 
-    // nameRef = React.createRef()
 
     getData = async (token) => {
         try{
@@ -78,27 +72,6 @@ class RecJobs extends Component {
     }
 
 
-    
-
-    // getJobState = (job) =>{
-    //     var applied_applicant_ids = job.application_ids.map(appl => {
-    //          return appl.applicant_id
-    //     })
-    //     var cur_applicant_id = this.state.userData._id
-    //     if(applied_applicant_ids.includes(cur_applicant_id)){
-    //         if(this.state.userData.state === 'gotJob'){
-    //             var accepted_application = this.state.userData.application_ids.filter(appl => appl.stage === 'accepted')[0]
-    //             if(job._id === accepted_application.job_id._id) return (<Button disabled key={"emp-" + job._id} variant="dark">Employed</Button>)
-    //         }
-    //         return (<Button disabled key={"done-" + job._id} variant="success">Applied</Button>)
-    //     }
-
-    //     if(job.state === 'appFilled') return (<Button disabled key={"done-" + job._id} variant="danger">Applications Filled</Button>)
-    //     if(job.state === 'posFilled') return (<Button disabled key={"posDone-" + job._id} variant="warning">Positions Filled</Button>)
-
-    //     return (<Button key={"apply-" + job._id} variant="primary" onClick={(e) => this.openApply(e,job._id , job.recruiter_id._id)}>Apply</Button>)
-
-    // }
 
 
 
@@ -168,7 +141,6 @@ class RecJobs extends Component {
 
     onJobSubmit = async (e) =>{
         e.preventDefault()
-        console.log('COMPARING WITH' , this.state.edit_job)
         if(this.state.max_pos < this.state.edit_job.pos){
             this.setState({
                 showError: true,
@@ -189,7 +161,6 @@ class RecJobs extends Component {
             deadline: this.state.deadline
         }
 
-        console.log(newJob)
         this.setState({canEdit: false , edit_job: '' , max_app: '' , max_pos:"" , deadline:'' , loading: true})
 
         try{
@@ -220,12 +191,9 @@ class RecJobs extends Component {
     }
       
 
-    
-    //   onClick={this.editName} style={{marginTop:'1rem' , marginLeft:'1rem'}}
     render() {
 
 
-        // console.log("STATE ON THIS RENDER IS" , this.state)
         return this.state.loading ? <Loader type="Circles" color='blue' radius height={200} width={200} style={{marginLeft:'43%' , marginTop:'20%'}}/> : (
             <div>
                 <Snackbar open={this.state.showError} autoHideDuration={5000} onClose={this.handleErrorClose}>

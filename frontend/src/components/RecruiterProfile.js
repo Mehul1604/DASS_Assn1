@@ -1,17 +1,13 @@
 import React, {Component} from 'react';
-import {Link} from 'react-router-dom'
-import {Container ,Grid , Paper , TextField , Snackbar} from '@material-ui/core'
+import {Grid , TextField , Snackbar} from '@material-ui/core'
 import {Button , Form} from 'react-bootstrap'
 import MuiAlert from '@material-ui/lab/Alert'
-import ReceiptIcon from '@material-ui/icons/Receipt';
-import WorkIcon from '@material-ui/icons/Work';
 import UserContext from '../context/UserContext'
 import axios from 'axios';
 import Loader from 'react-loader-spinner';
+import Resizer from 'react-image-file-resizer';
 
-// import {connect} from 'react-redux'
-// import PropTypes from 'prop-types'
-// import {loadUser} from '../actions/authActions'
+
 
 function Alert(props) {
     return <MuiAlert elevation={6} variant="filled" {...props} />;
@@ -39,7 +35,7 @@ class RecruiterProfile extends Component {
         errorMsg: ''
     }
 
-    // nameRef = React.createRef()
+
     getRecruiter = async (token) => {
         try{
             console.log('making axios now'  )
@@ -102,7 +98,7 @@ class RecruiterProfile extends Component {
     submitName = async (e) =>{
         e.preventDefault()
         this.setState({loading: true})
-        console.log('NEW NAME IS' , this.state.name)
+
         this.setState({canEditName: false})
         const body = {name: this.state.name}
         try{
@@ -123,7 +119,7 @@ class RecruiterProfile extends Component {
     submitContact = async (e) =>{
         e.preventDefault()
         this.setState({loading: true})
-        console.log('NEW CONTACT IS' , this.state.contact)
+
         this.setState({canEditContact: false})
         const body = {contact: this.state.contact}
         try{
@@ -140,7 +136,7 @@ class RecruiterProfile extends Component {
 
     submitBio = async () =>{
         this.setState({loading: true})
-        console.log('NEW BIO IS' , this.state.bio)
+
         this.setState({canEditBio: false})
         const body = {bio: this.state.bio}
         try{
@@ -155,20 +151,31 @@ class RecruiterProfile extends Component {
         
     }
 
-    convert64 = (file) => {
-        return new Promise((resolve , reject) => {
-            const fileReader = new FileReader()
-            fileReader.readAsDataURL(file)
+    // convert64 = (file) => {
+    //     return new Promise((resolve , reject) => {
+    //         const fileReader = new FileReader()
+    //         fileReader.readAsDataURL(file)
 
-            fileReader.onload = () =>{
-                resolve(fileReader.result)
-            }
+    //         fileReader.onload = () =>{
+    //             resolve(fileReader.result)
+    //         }
 
-            fileReader.onerror = (err) =>{
-                reject(err)
-            }
+    //         fileReader.onerror = (err) =>{
+    //             reject(err)
+    //         }
+    //     })
+    // }
+
+    resizeFile = (file) => {
+        return new Promise(resolve => {
+            Resizer.imageFileResizer(file , 128 , 128 , 'JPEG' , 100 , 0 , uri => {
+                resolve(uri);
+            } , 
+            'base64'
+            );
         })
     }
+
     editPhoto = (e) =>{
         this.setState({canUpload: true})
     }
@@ -185,9 +192,9 @@ class RecruiterProfile extends Component {
             })
             return
         }
-        console.log(this.state.file)
-        const base64 = await this.convert64(this.state.file)
-        // console.log(base64)
+
+        const base64 = await this.resizeFile(this.state.file)
+
         this.setState({loading: true , validOpen: false , errorMsg: '' , file: null , canUpload: false})
         const body = {
             base64: base64
@@ -223,7 +230,7 @@ class RecruiterProfile extends Component {
     
 
     render() {
-        // console.log(this.context)
+
         return this.state.loading ? <Loader type="Circles" color='blue' radius height={200} width={200} style={{marginLeft:'43%' , marginTop:'20%'}}/> : (
             <div className="container" style={{  marginTop:'2rem'}}>
 
@@ -285,7 +292,7 @@ class RecruiterProfile extends Component {
                             <Grid  item>
                                 <div>
                                     <h3>Profile Picture</h3>
-                                    {!(this.state.base64 === "") ? <img src={this.state.base64} width="200px" height="200px"/> : "No Image Uploaded"}
+                                    {!(this.state.base64 === "") ? <img alt="profile_pic" src={this.state.base64} width="200px" height="200px"/> : "No Image Uploaded"}
                                     {!this.state.canUpload ? (
                                         <>
                                         
@@ -311,10 +318,6 @@ class RecruiterProfile extends Component {
     }
 }
 
-// const mapStateToProps = (state) =>({
-//     isAuthenticated: state.auth.isAuthenticated,
-//     user: state.auth.user,
-//     error: state.error
-// })
+
 
 export default RecruiterProfile

@@ -11,27 +11,14 @@ import PhoneIcon from '@material-ui/icons/Phone';
 import InfoIcon from '@material-ui/icons/Info';
 import UserContext from '../context/UserContext'
 
-// import {connect} from 'react-redux'
-// import {register , setNull , loadUser} from '../actions/authActions'
-// import {clearErrors} from '../actions/errorActions'
-// import PropTypes from 'prop-types'
+
 
 function Alert(props) {
     return <MuiAlert elevation={6} variant="filled" {...props} />;
   }
 
 
- 
-const ITEM_HEIGHT = 48;
-const ITEM_PADDING_TOP = 8;
-const MenuProps = {
-  PaperProps: {
-    style: {
-      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-      width: 250,
-    },
-  },
-};
+
 
 class Register extends Component {
     
@@ -90,7 +77,7 @@ class Register extends Component {
         }
 
         if(this.state.type === 'Applicant'){
-            console.log('APPLICANT')
+
             if(em){
                 console.log('email invalid')
                 this.setState({
@@ -115,9 +102,8 @@ class Register extends Component {
                     errorMsg: err.response.data.msg
                 })
             })
-            // this.props.register(newApplicant , 'Applicant')
-            // console.log(this.props.isAuthenticated)
-            console.log(newApplicant)
+
+
 
             
         }
@@ -129,7 +115,7 @@ class Register extends Component {
             if(this.state.bio.split(' ').length > 5){
                 b = true
             }
-            console.log('RECRUITER')
+
 
             if(em || con){
                 var msg = ''
@@ -166,11 +152,7 @@ class Register extends Component {
                 bio: this.state.bio
             }
 
-            // this.props.register(newRecruiter , 'Recruiter')
-            console.log(newRecruiter)
-            // console.log(this.props.isAuthenticated)
-            // console.log('SENDING RECRUITER TO PATH /api/recruiters')
-            // console.log(newRecruiter)
+
             axios.post('/api/recruiters' , newRecruiter)
             .then(res => {
                 this.context.setUser(res.data.token , true , res.data.user)
@@ -280,9 +262,5 @@ class Register extends Component {
     }
 }
 
-// const mapStateToProps = (state) =>({
-//     isAuthenticated: state.auth.isAuthenticated,
-//     error: state.error
-// })
 
 export default Register

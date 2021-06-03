@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
-import {Link} from 'react-router-dom'
+
 import {Snackbar , Button as MButton} from '@material-ui/core'
-import {Table , Container, Row, Form, Col, Button , Modal , InputGroup} from 'react-bootstrap'
+import {Table , Container, Row, Form, Button , Modal} from 'react-bootstrap'
 import KeyboardReturnIcon from '@material-ui/icons/KeyboardReturn';
 import MuiAlert from '@material-ui/lab/Alert'
 import Rating from '@material-ui/lab/Rating'
@@ -11,27 +11,12 @@ import Loader from 'react-loader-spinner';
 import {generate} from 'shortid'
 
 
-// import {connect} from 'react-redux'
-// import PropTypes from 'prop-types'
-// import {loadUser} from '../actions/authActions'
+
 
 function Alert(props) {
     return <MuiAlert elevation={6} variant="filled" {...props} />;
   }
 
-  function formatDate(date) {
-    var d = new Date(date)
-        var month = '' + (d.getMonth() + 1);
-        var day = '' + d.getDate();
-        var year = d.getFullYear();
-
-    if (month.length < 2) 
-        month = '0' + month;
-    if (day.length < 2) 
-        day = '0' + day;
-
-    return [year, month, day].join('-');
-}
 
 function makeButton(id,str){
     if(str === 'applied'){
@@ -55,10 +40,13 @@ class JobApps extends Component {
     state = {
         jobData: null,
         applicationData: null,
+        origApplications: null,
         showEdu: false,
         eduInfo: [],
         showSop: false,
         sop: '',
+        sortSelected: 'None',
+        sortOrder: '',
         showError: false,
         errorMsg: '',
         loading: true
@@ -75,6 +63,7 @@ class JobApps extends Component {
             this.setState({
                 jobData: job.data,
                 applicationData: applications.data,
+                origApplications: applications.data
             })
         }
         catch(err){
@@ -163,6 +152,7 @@ class JobApps extends Component {
         const body = {
             stage: newStage
         }
+        console.log(body)
 
         this.setState({loading:true})
         
@@ -184,25 +174,83 @@ class JobApps extends Component {
 
 
     }
-    // <div key={`${appl._id}-${generate()}`}>
-    //     <Form style={{marginBottom:'1rem'}}>
-    //     <Form.Label>Institution</Form.Label>
-    //     <Form.Control value={edu.institution} type='text' readOnly  />
-    //     <Form.Label>Start Year</Form.Label>
-    //     <Form.Control value={edu.start_year} type='text' readOnly  />
-    //     {edu.end_year ? (
-    //     <>
-    //     <Form.Label>End Year</Form.Label>
-    //     <Form.Control value={edu.end_year} type='text' readOnly  />
-    //     </>
-    //     ) : ''}
-    //     </Form>
-    //     </div>
-    
-    //   onClick={this.editName} style={{marginTop:'1rem' , marginLeft:'1rem'}}
+
+    onFilterChange = (e) =>{
+        const sortSelected = e.target.name === 'sortSelected' ? e.target.value : this.state.sortSelected
+        const sortOrder = e.target.name === 'sortOrder' ? e.target.value : this.state.sortOrder
+
+        let filteredApps = this.state.origApplications.slice()
+        
+
+        console.log("OPTIONS SELECTED ARE" , sortSelected , sortOrder)
+
+        if(sortSelected !== "None"){
+            if(sortOrder === "Ascending"){
+                switch(sortSelected){
+                    case "Name":
+                        filteredApps.sort((a,b) => {
+                            if(a.applicant_id.name.toLowerCase() < b.applicant_id.name.toLowerCase())return -1;
+                            if(a.applicant_id.name.toLowerCase() > b.applicant_id.name.toLowerCase()) return 1;
+
+                            return 0;
+                        })
+                        break
+                    case "Date_App":
+                        filteredApps.sort((a,b) => {
+                            if(Date.parse(a.date_of_app) < Date.parse(b.date_of_app)) return -1;
+                            if(Date.parse(a.date_of_app) > Date.parse(b.date_of_app)) return 1;
+
+                            return 0;
+                        })
+                        break
+                    case "Rating":
+                        filteredApps.sort((a,b) => {
+                            if(this.getRating(a.applicant_id.ratings) < this.getRating(b.applicant_id.ratings)) return -1;
+                            if(this.getRating(a.applicant_id.ratings) > this.getRating(b.applicant_id.ratings)) return 1;
+
+                            return 0;
+                        })
+                        break
+                }
+            }
+            else if(sortOrder === "Descending"){
+                switch(sortSelected){
+                    case "Name":
+                        filteredApps.sort((a,b) => {
+                            if(a.applicant_id.name.toLowerCase() < b.applicant_id.name.toLowerCase())return 1;
+                            if(a.applicant_id.name.toLowerCase() > b.applicant_id.name.toLowerCase()) return -1;
+
+                            return 0;
+                        })
+                        break
+                    case "Date_App":
+                        filteredApps.sort((a,b) => {
+                            if(Date.parse(a.date_of_app) < Date.parse(b.date_of_app)) return 1;
+                            if(Date.parse(a.date_of_app) > Date.parse(b.date_of_app)) return -1;
+
+                            return 0;
+                        })
+                        break
+                    case "Rating":
+                        filteredApps.sort((a,b) => {
+                            if(this.getRating(a.applicant_id.ratings) < this.getRating(b.applicant_id.ratings)) return 1;
+                            if(this.getRating(a.applicant_id.ratings) > this.getRating(b.applicant_id.ratings)) return -1;
+
+                            return 0;
+                        })
+                        break
+                }
+            }
+        }
+
+
+        this.setState({[e.target.name]: e.target.value , applicationData: filteredApps})
+    }
+   
     render() {
 
         console.log(this.context)
+        // console.log("mehul" < "manasvi")
         // console.log("STATE ON THIS RENDER IS" , this.state)
         return this.state.loading ? <Loader type="Circles" color='blue' radius height={200} width={200} style={{marginLeft:'43%' , marginTop:'20%'}}/> : (
             <div>
@@ -266,6 +314,24 @@ class JobApps extends Component {
                 <Container >
                     <Row className="justify-content-md-center">
                     <h1 style={{fontSize:'450%'}}>Applications for {this.state.jobData.title}</h1>
+                    </Row>
+
+                    <Row className="justify-content-md-center" style={{border:'1px solid black'  , padding:'1rem'}}>
+                            <Form inline>
+                                <Form.Label>Order by:</Form.Label>
+                                <Form.Control  name="sortSelected" value={this.state.sortSelected} onChange={this.onFilterChange} className="mr-sm-4"  as="select">
+                                    <option value="None">None</option>
+                                    <option value="Name">Name</option>
+                                    <option value="Date_App">Date of Application</option>
+                                    <option value="Rating">Applicant Rating</option>
+                                </Form.Control>
+                                <Form.Control  name="sortOrder" value={this.state.sortOrder} onChange={this.onFilterChange} className="mr-sm-4"  as="select">
+                                     <option value="">Select order</option>
+                                    <option value="Ascending">Ascending</option>
+                                    <option value="Descending">Descending</option>
+                                </Form.Control>
+                            
+                            </Form>
                     </Row>
                     
                 </Container>

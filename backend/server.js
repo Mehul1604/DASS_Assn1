@@ -28,7 +28,7 @@ mongoose.connect(db , { useNewUrlParser: true , useUnifiedTopology: true })
     .then(() => console.log('Database Connected!'))
     .catch(err => console.log(err))
 
-
+// route to see if token is valid or not
 app.post('/api/tokenValid' , async (req,res) => {
 
     
@@ -37,12 +37,11 @@ app.post('/api/tokenValid' , async (req,res) => {
         if(!token){
             return res.json(false)
         }
-        // console.log('Ok token exists')
+
         const decoded = jwt.verify(token , config.get('jwtSecret'))
-        // console.log(decoded)
+
         if(!decoded) return res.json(false)
 
-        // console.log('Ok token got decoded also')
 
         var appl = await Applicant.findById(decoded.id)
         var recr = await Recruiter.findById(decoded.id)
@@ -57,6 +56,7 @@ app.post('/api/tokenValid' , async (req,res) => {
     }
 })
 
+// get name , email and type of the user
 app.get('/api/user' , auth , async (req, res) => {
     
     try {
@@ -84,6 +84,7 @@ app.get('/api/user' , auth , async (req, res) => {
     }
 })
 
+// route to send mail to accepted applicant
 app.post('/api/sendMail' , auth ,  async (req,res) => {
 
     const recruiter = await Recruiter.findById(req.user.id)
@@ -95,7 +96,6 @@ app.post('/api/sendMail' , auth ,  async (req,res) => {
     const {recruiterName , applicationId} = req.body 
     try{
         const applicationAccepted = await Application.findById(applicationId)
-        // console.log(applicationAccepted)
         const jobJoined = await Job.findById(applicationAccepted.job_id)
         const jobName = jobJoined.title
         const applicantJoined = await Applicant.findById(applicationAccepted.applicant_id)

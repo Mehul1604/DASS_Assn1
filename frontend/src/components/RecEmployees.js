@@ -1,35 +1,20 @@
 import React, {Component} from 'react';
 import {Snackbar} from '@material-ui/core'
 import Rating from '@material-ui/lab/Rating';
-import {Table , Container, Row, Form, Col, Button , Modal} from 'react-bootstrap'
+import {Table , Container, Row, Form, Button , Modal} from 'react-bootstrap'
 import MuiAlert from '@material-ui/lab/Alert'
 import UserContext from '../context/UserContext'
 import axios from 'axios';
 import Loader from 'react-loader-spinner';
 
 
-// import {connect} from 'react-redux'
-// import PropTypes from 'prop-types'
-// import {loadUser} from '../actions/authActions'
+
 
 function Alert(props) {
     return <MuiAlert elevation={6} variant="filled" {...props} />;
   }
 
-// function makeButton(id,str){
-//     if(str === 'applied'){
-//         return (<Button disabled key={"applied-" + id} variant="dark">Applied</Button>)
-//     }
-//     if(str === 'shortlisted'){
-//         return (<Button disabled key={"shortlisted-" + id} variant="warning">Shortlisted</Button>)
-//     }
-//     if(str === 'accepted'){
-//         return (<Button disabled key={"accepted-" + id} variant="success">Accepted</Button>)
-//     }
-//     if(str === 'rejected'){
-//         return (<Button disabled key={"rejected-" + id} variant="danger">Rejected</Button>)
-//     }
-// }
+
 
 class RecEmployees extends Component {
     
@@ -48,7 +33,6 @@ class RecEmployees extends Component {
         loading: true
     }
 
-    // nameRef = React.createRef()
 
     getData = async (token) => {
         try{
@@ -163,34 +147,25 @@ class RecEmployees extends Component {
         const sortOrder = e.target.name === 'sortOrder' ? e.target.value : this.state.sortOrder
 
         let filteredEmps = this.state.origEmployees.slice()
-        // let test = this.state.origEmployees.slice()
-
-        // test.sort((a,b) => {
-        //     if(a.applicant_id.name < b.applicant_id.name) return -1;
-        //     if(a.applicant_id.name > b.applicant_id.name) return 1;
-
-        //     return 0;
-        // })
-
-        // console.log('TEST' , test)
+        
 
         console.log("OPTIONS SELECTED ARE" , sortSelected , sortOrder)
-        //console.log("emps before" , filteredEmps)
+
         if(sortSelected !== "None"){
             if(sortOrder === "Ascending"){
                 switch(sortSelected){
                     case "Name":
                         filteredEmps.sort((a,b) => {
-                            if(a.applicant_id.name < b.applicant_id.name)return -1;
-                            if(a.applicant_id.name > b.applicant_id.name) return 1;
+                            if(a.applicant_id.name.toLowerCase() < b.applicant_id.name.toLowerCase())return -1;
+                            if(a.applicant_id.name.toLowerCase() > b.applicant_id.name.toLowerCase()) return 1;
 
                             return 0;
                         })
                         break
                     case "Title":
                         filteredEmps.sort((a,b) => {
-                            if(a.job_id.title < b.job_id.title) return -1;
-                            if(a.job_id.title > b.job_id.title) return 1;
+                            if(a.job_id.title.toLowerCase() < b.job_id.title.toLowerCase()) return -1;
+                            if(a.job_id.title.toLowerCase() > b.job_id.title.toLowerCase()) return 1;
 
                             return 0;
                         })
@@ -217,16 +192,16 @@ class RecEmployees extends Component {
                 switch(sortSelected){
                     case "Name":
                         filteredEmps.sort((a,b) => {
-                            if(a.applicant_id.name < b.applicant_id.name) return 1;
-                            if(a.applicant_id.name > b.applicant_id.name) return -1;
+                            if(a.applicant_id.name.toLowerCase() < b.applicant_id.name.toLowerCase()) return 1;
+                            if(a.applicant_id.name.toLowerCase() > b.applicant_id.name.toLowerCase()) return -1;
 
                             return 0;
                         })
                         break
                     case "Title":
                         filteredEmps.sort((a,b) => {
-                            if(a.job_id.title < b.job_id.title) return 1;
-                            if(a.job_id.title > b.job_id.title) return -1;
+                            if(a.job_id.title.toLowerCase() < b.job_id.title.toLowerCase()) return 1;
+                            if(a.job_id.title.toLowerCase() > b.job_id.title.toLowerCase()) return -1;
 
                             return 0;
                         })
@@ -251,7 +226,6 @@ class RecEmployees extends Component {
             }
         }
 
-        console.log("emps after" , filteredEmps)
 
         this.setState({[e.target.name]: e.target.value , employeesData: filteredEmps})
     }
@@ -260,7 +234,6 @@ class RecEmployees extends Component {
     
     render() {
 
-        // console.log("STATE ON THIS RENDER IS" , this.state)
         return this.state.loading ? <Loader type="Circles" color='blue' radius height={200} width={200} style={{marginLeft:'43%' , marginTop:'20%'}}/> : (
             <div>
                 <Snackbar open={this.state.showError} autoHideDuration={5000} onClose={this.handleErrorClose}>

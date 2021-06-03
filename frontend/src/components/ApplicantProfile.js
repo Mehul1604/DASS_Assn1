@@ -1,6 +1,5 @@
 import React, {Component} from 'react';
-import {Link} from 'react-router-dom'
-import {Container , Grid , Paper , TextField , Snackbar} from '@material-ui/core'
+import { Grid  , TextField , Snackbar} from '@material-ui/core'
 import {Form} from 'react-bootstrap'
 import {Button} from 'react-bootstrap'
 import MuiAlert from '@material-ui/lab/Alert'
@@ -9,10 +8,9 @@ import axios from 'axios';
 import Loader from 'react-loader-spinner';
 import {generate} from 'shortid'
 import Select from 'react-select';
+import Resizer from 'react-image-file-resizer';
 
-// import {connect} from 'react-redux'
-// import PropTypes from 'prop-types'
-// import {loadUser} from '../actions/authActions'
+
 
 const predefSkills = [
     {
@@ -74,7 +72,6 @@ class ApplicantProfile extends Component {
         errorMsg: ''
     }
 
-    // nameRef = React.createRef()
 
     componentDidMount(){
         
@@ -124,12 +121,12 @@ class ApplicantProfile extends Component {
 
     submitName = async () =>{
         this.setState({loading: true})
-        // console.log('NEW NAME IS' , this.state.name)
+
         this.setState({canEditName: false})
         const body = {name: this.state.name}
         try{
             const changedNameApplicant = await axios.post('/api/applicants/profile' , body , {headers: {'x-auth-token': this.context.token}})
-            // console.log('GONNA GIVE' , changedNameApplicant.data)
+
             this.context.changeName(changedNameApplicant.data.name)
         }
         catch(err){
@@ -259,25 +256,35 @@ class ApplicantProfile extends Component {
         return sum/n
     }
 
-    convert64 = (file) => {
-        return new Promise((resolve , reject) => {
-            const fileReader = new FileReader()
-            fileReader.readAsDataURL(file)
+    // convert64 = (file) => {
+    //     return new Promise((resolve , reject) => {
+    //         const fileReader = new FileReader()
+    //         fileReader.readAsDataURL(file)
 
-            fileReader.onload = () =>{
-                resolve(fileReader.result)
-            }
+    //         fileReader.onload = () =>{
+    //             resolve(fileReader.result)
+    //         }
 
-            fileReader.onerror = (err) =>{
-                reject(err)
-            }
+    //         fileReader.onerror = (err) =>{
+    //             reject(err)
+    //         }
+    //     })
+    // }
+
+    resizeFile = (file) => {
+        return new Promise(resolve => {
+            Resizer.imageFileResizer(file , 128 , 128 , 'JPEG' , 100 , 0 , uri => {
+                resolve(uri);
+            } , 
+            'base64'
+            );
         })
     }
     editPhoto = (e) =>{
         this.setState({canUpload: true})
     }
 
-    chooseFile = (e) =>{
+    chooseFile = async (e) =>{        
         this.setState({file: e.target.files[0]})
     }
 
@@ -290,8 +297,10 @@ class ApplicantProfile extends Component {
             return
         }
         console.log(this.state.file)
-        const base64 = await this.convert64(this.state.file)
-        // console.log(base64)
+        const base64 = await this.resizeFile(this.state.file)
+        // console.log(b64)
+        // const base64 = await this.convert64(this.state.file)
+
         this.setState({loading: true , validOpen: false , errorMsg: '' , file: null , canUpload: false})
         const body = {
             base64: base64
@@ -323,10 +332,9 @@ class ApplicantProfile extends Component {
             console.log(err.message)
         }
     }
-    //   onClick={this.editName} style={{marginTop:'1rem' , marginLeft:'1rem'}}
+
     render() {
-        // console.log('CONTEXT LOOKS LIKE' , this.context)
-        // console.log(this.state)
+
         return this.state.loading ? <Loader type="Circles" color='blue' radius height={200} width={200} style={{marginLeft:'43%' , marginTop:'20%'}}/> : (
             
             <div className="container" style={{  marginTop:'2rem'}}>
@@ -346,8 +354,8 @@ class ApplicantProfile extends Component {
                                     <TextField required InputProps={{readOnly: !this.state.canEditName}} value={this.state.name} onChange={this.onNameChange}   variant='outlined'/>
                                     {!this.state.canEditName ? (<Button variant="primary" key="edit-button" style={{marginTop:'1rem' , marginLeft:'1rem'}} type="button" onClick={this.editName}>Edit</Button>) : (
                                     <>
-                                    <Button key="name-submit" variant="danger" style={{marginLeft:'1rem' , marginTop:'1rem'}} onClick={this.cancelName} type="button">Cancel</Button>
-                                    <Button key="name-cancel" variant="success"  type="submit" key="name-submit" style={{marginTop:'1rem'}} >Submit</Button>
+                                    <Button key="name-cancel" variant="danger" style={{marginLeft:'1rem' , marginTop:'1rem'}} onClick={this.cancelName} type="button">Cancel</Button>
+                                    <Button  variant="success"  type="submit" key="name-submit" style={{marginTop:'1rem'}} >Submit</Button>
                                     </>
                                     )}
                                     </form>
@@ -415,9 +423,7 @@ class ApplicantProfile extends Component {
                             <Grid  item>
                                 <div>
                                     <h3>Skills</h3>
-                                    {/* {this.state.skills.length ? this.state.skills.map((skill , idx) => (
-                                        <span key={idx}>{skill} </span>
-                                    )) : 'Add Skills'} */}
+                                    
                                     <Select  isDisabled={!this.state.canEditSkills} className="dropdown" placeholder="Select skill" value={predefSkills.filter(obj => this.state.skills.includes(obj.label))} options={predefSkills} onChange={this.skillChange} isMulti/>
                                     {!this.state.canEditSkills ? (<Button variant="primary" key="edit-button-skill" style={{marginTop:'1rem'}} type="button" onClick={this.editSkill}>Edit</Button>) : (<Button variant="success" onClick={this.skillSubmit}  style={{marginTop:'1rem'}}>Submit</Button>)}
                                     
@@ -426,7 +432,7 @@ class ApplicantProfile extends Component {
                             <Grid  item>
                                 <div>
                                     <h3>Profile Picture</h3>
-                                    {!(this.state.base64 === "") ? <img src={this.state.base64} width="200px" height="200px"/> : "No Image Uploaded"}
+                                    {!(this.state.base64 === "") ? <img alt="profile_pic" src={this.state.base64} width="200px" height="200px"/> : "No Image Uploaded"}
                                     {!this.state.canUpload ? (
                                         <>
                                         
@@ -452,10 +458,5 @@ class ApplicantProfile extends Component {
     }
 }
 
-// const mapStateToProps = (state) =>({
-//     isAuthenticated: state.auth.isAuthenticated,
-//     user: state.auth.user,
-//     error: state.error
-// })
 
 export default ApplicantProfile

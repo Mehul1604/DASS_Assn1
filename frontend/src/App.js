@@ -18,8 +18,7 @@ import RecCreate from './components/RecCreate'
 import RecJobs from './components/RecJobs'
 import JobApps from './components/JobApps';
 import RecEmployees from './components/RecEmployees'
-// import {Provider} from 'react-redux'
-// import store from './store'
+
 
 class App extends Component{
 

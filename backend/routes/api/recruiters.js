@@ -5,7 +5,7 @@ const config = require('config')
 const jwt = require('jsonwebtoken')
 const auth = require('../../middleware/auth')
 
-//Recruiter Model
+
 const Recruiter = require('../../models/Recruiter');
 const Applicant = require('../../models/Applicant');
 
@@ -80,7 +80,7 @@ router.post('/' , (req,res) =>{
             })
         })
     
-    // newApplicant.save().then(applicant => res.json(applicant)).catch(err => console.log(err));
+    
 });
 
 // @route POST api/recruiters/profile
@@ -117,7 +117,7 @@ router.post('/profile' , auth, async (req,res) =>{
 
 router.post('/imgUpload' , auth , async (req,res) => {
     const {base64} = req.body
-    console.log('RECIEVED' , base64[0])
+
     try{
         await Recruiter.findByIdAndUpdate(req.user.id , {profile_img : base64})
         res.json({msg: 'success'})

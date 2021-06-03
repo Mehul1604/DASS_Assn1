@@ -1,5 +1,4 @@
 import React, {Component} from 'react';
-import {Link} from 'react-router-dom'
 import {Snackbar} from '@material-ui/core'
 import {Table , Container, Row, Form, Col, Button , Modal , InputGroup} from 'react-bootstrap'
 import {Search} from 'react-bootstrap-icons'
@@ -11,9 +10,6 @@ import Loader from 'react-loader-spinner';
 import Fuse from 'fuse.js'
 
 
-// import {connect} from 'react-redux'
-// import PropTypes from 'prop-types'
-// import {loadUser} from '../actions/authActions'
 
 function Alert(props) {
     return <MuiAlert elevation={6} variant="filled" {...props} />;
@@ -47,7 +43,6 @@ class AppJobs extends Component {
         errorMsg: ''
     }
 
-    // nameRef = React.createRef()
 
     getData = async (token) => {
         try{
@@ -128,10 +123,7 @@ class AppJobs extends Component {
 
     handleSopSubmit = async (e) =>{
 
-        // console.log(this.state.sop.length)
-        // console.log(this.state.sop)
-        // var words = this.state.sop.split(/\s+/)
-        // console.log(words)
+
         e.preventDefault()
         let sop_text = this.state.sop
         let word_sent = sop_text.replace(/\s+/g, ' ').trim()
@@ -146,7 +138,7 @@ class AppJobs extends Component {
                 return;
             }
         }
-        // console.log('TYPED' , this.state.sop , words)
+
         if(word_arr.length > 250){
             this.setState({
                 showError: true,
@@ -220,7 +212,9 @@ class AppJobs extends Component {
             let search_filter = search
             search_filter= search_filter.replace(/\s+/g,' ').trim()
             search_filter = search_filter.toLowerCase()
-            filteredJobs = filteredJobs.filter(fj => (fj.title.toLowerCase().indexOf(search_filter) > -1))
+            // filteredJobs = filteredJobs.filter(fj => (fj.title.toLowerCase().indexOf(search_filter) > -1))
+            const fuse = new Fuse(filteredJobs , {keys: ['title']})
+            filteredJobs = fuse.search(search_filter).map(sf => sf.item)
         }
         
 
@@ -314,11 +308,11 @@ class AppJobs extends Component {
       
 
     
-    //   onClick={this.editName} style={{marginTop:'1rem' , marginLeft:'1rem'}}
+
     render() {
 
 
-        // console.log("STATE ON THIS RENDER IS" , this.state)
+
         return this.state.loading ? <Loader type="Circles" color='blue' radius height={200} width={200} style={{marginLeft:'43%' , marginTop:'20%'}}/> : (
             <div>
                 <Snackbar open={this.state.showError} autoHideDuration={5000} onClose={this.handleErrorClose}>
@@ -351,9 +345,7 @@ class AppJobs extends Component {
                     <h1 style={{fontSize:'450%'}}>Search Jobs</h1>
                     </Row>
                     <Row style={{marginTop:'1rem' , border:'1px solid black'}}>
-                        {/* <Col xs={4}>
-                            
-                        </Col> */}
+
                         <Col>
                         <Row className="justify-content-md-center" style={{border:'1px solid black'  , padding:'1rem'}}>
                             <Form inline>

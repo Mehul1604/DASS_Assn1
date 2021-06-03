@@ -1,18 +1,13 @@
 import React, {Component} from 'react';
-import {Link} from 'react-router-dom'
 import {Snackbar} from '@material-ui/core'
-import Rating from '@material-ui/lab/Rating';
-import {Table , Container, Row, Form, Col, Button , Modal} from 'react-bootstrap'
+import {Table , Container, Row, Form,  Button , Modal} from 'react-bootstrap'
 import MuiAlert from '@material-ui/lab/Alert'
 import UserContext from '../context/UserContext'
 import axios from 'axios';
 import Loader from 'react-loader-spinner';
-import Fuse from 'fuse.js'
 
 
-// import {connect} from 'react-redux'
-// import PropTypes from 'prop-types'
-// import {loadUser} from '../actions/authActions'
+
 
 function Alert(props) {
     return <MuiAlert elevation={6} variant="filled" {...props} />;
@@ -49,7 +44,6 @@ class AppApplications extends Component {
         loading: true
     }
 
-    // nameRef = React.createRef()
 
     getData = async (token) => {
         try{
@@ -180,7 +174,7 @@ class AppApplications extends Component {
     
     render() {
 
-        console.log("STATE ON THIS RENDER IS" , this.state)
+        // console.log("STATE ON THIS RENDER IS" , this.state)
         return this.state.loading ? <Loader type="Circles" color='blue' radius height={200} width={200} style={{marginLeft:'43%' , marginTop:'20%'}}/> : (
             <div>
                 <Snackbar open={this.state.showError} autoHideDuration={5000} onClose={this.handleErrorClose}>

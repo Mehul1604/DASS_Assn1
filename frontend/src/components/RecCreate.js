@@ -1,16 +1,13 @@
 import React, {Component} from 'react';
 import axios from 'axios'
-import {TextField, MenuItem , Snackbar , InputAdornment , Button} from '@material-ui/core'
+import {Snackbar  , Button} from '@material-ui/core'
 import MuiAlert from '@material-ui/lab/Alert'
 import AddIcon from '@material-ui/icons/Add';
 import UserContext from '../context/UserContext'
 import Loader from 'react-loader-spinner';
 import { Row  , Col , Container , Form} from 'react-bootstrap';
 import Select from 'react-select';
-// import {connect} from 'react-redux'
-// import {register , setNull , loadUser} from '../actions/authActions'
-// import {clearErrors} from '../actions/errorActions'
-// import PropTypes from 'prop-types'
+
 
 const predefSkills = [
     {
@@ -106,10 +103,6 @@ class RecCreate extends Component {
     
     static contextType = UserContext
 
-    // onChange = (e) =>{
-    //     this.setState({[e.target.name] : e.target.value})
-        
-    // }
     
     handleClose = (event, reason) => {
         if (reason === 'clickaway') {
@@ -145,7 +138,7 @@ class RecCreate extends Component {
           try{
             console.log('making axios post now..'  )
             this.setState({loading: true})
-            const createdJob = await axios.post('/api/jobs' , newJob,  {headers: {'x-auth-token' : this.context.token}})
+            await axios.post('/api/jobs' , newJob,  {headers: {'x-auth-token' : this.context.token}})
             this.getRec(this.context.token)
             this.setState({
                 validOpen: true,
@@ -285,9 +278,6 @@ class RecCreate extends Component {
     }
 }
 
-// const mapStateToProps = (state) =>({
-//     isAuthenticated: state.auth.isAuthenticated,
-//     error: state.error
-// })
+
 
 export default RecCreate

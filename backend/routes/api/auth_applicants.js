@@ -5,7 +5,7 @@ const config = require('config')
 const jwt = require('jsonwebtoken')
 const auth = require('../../middleware/auth')
 
-//Item Model
+
 const Applicant = require('../../models/Applicant');
 
 // @route POST api/auth/app
@@ -52,7 +52,6 @@ router.post('/' , (req,res) =>{
 // @access Private
  
 router.get('/user' , auth , (req,res) =>{
-    // console.log('tryna get applicant of id' , req.user.id)
     Applicant.findById(req.user.id).populate({
         path: 'application_ids',
         populate: {
