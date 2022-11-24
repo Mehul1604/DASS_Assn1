@@ -1,4 +1,4 @@
-# DASS Assignment 1 
+# Job Portal in MERN
 ### JobMart - Job Application Portal in MERN stack
 
 This is a website built using MERN stack (MongoDB , ExpressJS , React , NodeJs) which creates a common platform for recruiters and applicants. Recruiters can create jobs with a certain deadline to apply and applicants can view all such available jobs and apply to them. Recruiters have the option to shortlist , accept or reject an application. They can also delete jobs and edit them like changing their deadline or increasing their maximum number of positions
